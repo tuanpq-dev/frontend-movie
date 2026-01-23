@@ -115,15 +115,17 @@ const Comments = ({ movieId, userId, onLoadComplete }) => {
 
     const fetchComments = async () => {
         try {
-            const response = await axios.get(
-                `http://localhost:8080/api/comments/${movieId}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
+            if (userId) {
+                const response = await axios.get(
+                    `http://localhost:8080/api/comments/${movieId}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
                     },
-                },
-            );
-            setBackendComments(response.data);
+                );
+                setBackendComments(response.data);
+            }
         } catch (error) {
             console.error("Lỗi khi lấy bình luận:", error);
         } finally {

@@ -31,13 +31,16 @@ const VnPayReturn = () => {
 
     return (
         <div style={{ textAlign: "center", marginTop: "50px" }}>
-            <h2>{message}</h2>
+            <h2 className="text-2xl">{message}</h2>
             {status === "success" ? (
                 <>
-                    <p style={{ color: "green" }}>
+                    <p style={{ color: "green" }} className="mt-2 text-xl">
                         🎉 Cảm ơn bạn đã thanh toán!
                     </p>
-                    <Link to="/" className="mt-2 hover:opacity-90">
+                    <Link
+                        to="/"
+                        className="mt-3 inline-block cursor-pointer text-lg hover:opacity-90"
+                    >
                         Về trang chủ
                     </Link>
                 </>
@@ -48,6 +51,14 @@ const VnPayReturn = () => {
             ) : (
                 <p>⏳ Đang xử lý...</p>
             )}
+            <img
+                src={
+                    status === "success"
+                        ? "/payment-success.webp"
+                        : "/payment-failed.jpg"
+                }
+                className="mx-auto mt-4"
+            />
         </div>
     );
 };

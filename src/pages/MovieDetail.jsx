@@ -43,25 +43,22 @@ const MovieDetail = () => {
     }, [id]);
     const handleAddFavoriteMovie = async (movieIds) => {
         try {
-            // Kiểm tra nếu không có token
             if (!token) {
                 throw new Error(
                     "Token không tồn tại hoặc người dùng chưa đăng nhập",
                 );
             }
 
-            // Gửi yêu cầu POST lên server
             const response = await axios.post(
                 "http://localhost:8080/api/favoriteMovies",
-                { movieIds }, // Body request chứa movieIds
+                { movieIds },
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`, // Gửi token trong header để xác thực
+                        Authorization: `Bearer ${token}`,
                     },
                 },
             );
 
-            // Xử lý phản hồi từ server
             if (response.status === 201 || response.status === 200) {
                 const { userName, movieNames } = response.data;
                 console.log(`Người dùng: ${userName}`);
@@ -77,7 +74,6 @@ const MovieDetail = () => {
         } catch (error) {
             console.error("Lỗi khi thêm phim vào danh sách yêu thích:", error);
 
-            // Xử lý các lỗi cụ thể nếu cần, ví dụ:
             if (error.response) {
                 if (error.response.status === 400) {
                     console.error("Phim này đã có trong danh sách yêu thích.");

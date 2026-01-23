@@ -23,12 +23,13 @@ const PaymentModal = ({ handlePayment, isLoading, hidePaymentModal }) => {
                             </p>
                             <ul className="ml-5 mt-2 list-disc text-sm">
                                 <li>
-                                    Xem phim với chất lượng, tốc độ cao nhất
+                                    Xem phim với chất lượng, tốc độ tốt nhất
                                 </li>
                                 <li>
                                     Tận hưởng tất cả nội dung phim mới nhất của
                                     chúng tôi
                                 </li>
+                                <li>Mua một lần xem mãi mãi</li>
                                 <li>
                                     Bạn sẽ được nhiều hơn với số tiền bỏ ra!
                                 </li>

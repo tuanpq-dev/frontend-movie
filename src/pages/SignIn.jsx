@@ -9,7 +9,7 @@ const SignIn = () => {
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
-        e.preventDefault(); // Ngăn trang reload khi submit form
+        e.preventDefault();
         try {
             const response = await axios.post(
                 "http://localhost:8080/api/auth/login",
@@ -19,8 +19,8 @@ const SignIn = () => {
                 },
             );
             const { accesstoken } = response.data;
-            Cookies.set("accessToken", accesstoken, { expires: 5 }); // Lưu token vào cookie trong 5 ngày
-            navigate("/"); // Chuyển hướng sau khi đăng nhập thành công
+            Cookies.set("accessToken", accesstoken, { expires: 5 });
+            navigate("/");
         } catch (error) {
             console.error("Đăng nhập thất bại:", error);
         }
