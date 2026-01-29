@@ -6,26 +6,18 @@ import Cookies from "js-cookie";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import ChangePasswordModal from "@components/ChangePasswordModal";
 const UserProfile = () => {
     const { handleSubmit, register, setValue } = useForm();
     const navigate = useNavigate();
-    const changeTypePassword = (inputId, btnInd) => {
-        const currentPassword = document.getElementById(inputId);
-        const changeTypeBtn = document.getElementById(btnInd);
-        currentPassword.type =
-            currentPassword.type === "text" ? "password" : "text";
-        changeTypeBtn.src =
-            currentPassword.type === "text" ? "/show.svg" : "/hide.svg";
-    };
     const [password, setPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [errorMessage, setErrorMessage] = useState("");
     const [avatarPreview, setAvatarPreview] = useState("/img-placeholder.jpg");
     const [userName, setUserName] = useState("");
     const [email, setEmail] = useState("");
     const [id, setId] = useState("");
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [showChangePasswordModal, setShowChangePasswordModal] =
+        useState(false);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -49,7 +41,8 @@ const UserProfile = () => {
 
                     setUserName(userData.username);
                     setEmail(userData.email);
-                    setPassword(userData.password);
+                    // Không lưu mật khẩu mã hóa từ server
+                    setPassword("********");
                     setAvatarPreview(
                         "http://localhost:8080/images/avatar/" +
                             userData.avatar,
@@ -57,6 +50,7 @@ const UserProfile = () => {
                     setValue("username", userData.username);
                     setValue("email", userData.email);
                     setValue("_id", decodedToken.id);
+                    // eslint-disable-next-line no-undef
                     setValue("password", confirmPassword);
                 } else {
                     setIsLoggedIn(false);
@@ -77,45 +71,32 @@ const UserProfile = () => {
         }
     };
 
-    const handleClearData = () => {
-        setNewPassword("");
-        setConfirmPassword("");
-    };
-
     const onSubmit = async (data) => {
         const token = Cookies.get("accessToken");
-        if (newPassword !== confirmPassword) {
-            setErrorMessage(
-                "Mật khẩu xác nhận không trùng khớp. Vui lòng kiểm tra lại!",
-            );
-            return;
-        } else {
-            setErrorMessage("");
-            try {
-                const formData = new FormData();
 
-                // Thêm các trường dữ liệu khác vào formData
-                formData.append("_id", id);
-                formData.append("username", userName);
-                formData.append("email", email);
-                formData.append("password", confirmPassword);
+        try {
+            const formData = new FormData();
 
-                // Nếu có ảnh mới, thêm file vào formData
-                if (data.avatar) {
-                    formData.append("avatar", data.avatar[0]); // data.avatar[0] vì file là array
-                }
+            // Thêm các trường dữ liệu khác vào formData
+            formData.append("_id", id);
+            formData.append("username", userName);
+            formData.append("email", email);
 
-                await axios.put("http://localhost:8080/api/users/", formData, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "multipart/form-data", // Đảm bảo header phù hợp
-                    },
-                });
-                console.log({ formData: data });
-                navigate("/");
-            } catch (error) {
-                console.error("Error updating user:", error);
+            // Nếu có ảnh mới, thêm file vào formData
+            if (data.avatar) {
+                formData.append("avatar", data.avatar[0]); // data.avatar[0] vì file là array
             }
+
+            await axios.put("http://localhost:8080/api/users/", formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data", // Đảm bảo header phù hợp
+                },
+            });
+            console.log({ formData: data });
+            navigate("/");
+        } catch (error) {
+            console.error("Error updating user:", error);
         }
     };
     const handleLogout = () => {
@@ -246,32 +227,32 @@ const UserProfile = () => {
                             >
                                 Mật khẩu hiện tại
                             </label>
-                            <div className="mt-3 flex h-[48px] w-full items-center rounded-lg border border-solid border-[#d1d5db] bg-white px-3 italic focus-within:border-[#77dae6]">
-                                <img src="/lock.svg" alt="" className="mr-1" />
+                            <div className="mt-3 flex h-[48px] w-full items-center rounded-lg border border-solid border-[#d1d5db] bg-gray-100 px-3 italic">
+                                <img
+                                    src="/lock.svg"
+                                    alt=""
+                                    className="mr-1 opacity-50"
+                                />
                                 <input
-                                    className="h-full w-full"
+                                    className="h-full w-full cursor-not-allowed bg-gray-100 text-gray-500"
                                     type="password"
                                     name="current-password"
                                     id="current-password"
                                     value={password}
                                     readOnly
-                                />
-                                <img
-                                    id="change-type-current-password"
-                                    src="/hide.svg"
-                                    alt=""
-                                    className="ml-1 h-6 w-6"
-                                    onClick={() => {
-                                        changeTypePassword(
-                                            "current-password",
-                                            "change-type-current-password",
-                                        );
-                                    }}
+                                    disabled
                                 />
                             </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowChangePasswordModal(true)}
+                                className="mt-2 text-sm font-medium text-[#0166ff] hover:underline"
+                            >
+                                Đổi mật khẩu
+                            </button>
                         </div>
                     </div>
-                    <div className="mb-4 flex flex-col gap-10 lg:flex-row">
+                    {/* <div className="mb-4 flex flex-col gap-10 lg:flex-row">
                         <div className="flex-1">
                             <label
                                 className="font-bold text-[#384d6c]"
@@ -344,17 +325,12 @@ const UserProfile = () => {
                                 />
                             </div>
                         </div>
-                    </div>
-                    {errorMessage && (
-                        <p className="mt-2 font-medium text-red-500">
-                            {errorMessage}
-                        </p>
-                    )}
+                    </div> */}
                     <div className="mt-10 flex justify-end gap-4">
                         <button
                             type="button"
                             className="inline-flex h-11 items-center justify-center rounded-md border border-solid border-[#384d6c] bg-white px-4 font-medium text-[#384d6c]"
-                            onClick={handleClearData}
+                            onClick={() => navigate("/")}
                         >
                             Hủy
                         </button>
@@ -367,6 +343,12 @@ const UserProfile = () => {
                     </div>
                 </form>
             </div>
+
+            <ChangePasswordModal
+                isOpen={showChangePasswordModal}
+                onClose={() => setShowChangePasswordModal(false)}
+                userId={id}
+            />
         </div>
     );
 };

@@ -1,0 +1,29 @@
+.dataTableWrapper {
+  .dataTableFilter {
+    margin-bottom: 16px;
+  }
+
+  .dataTableHeader {
+    padding: 16px 24px;
+    width: 100%;
+  }
+  
+  .infoSelectedRow {
+    border-radius: 0;
+  }
+
+  .dataTableContent {
+    &:global(> .ant-card-body) {
+      padding: 0;
+      :global {
+        .ant-table-pagination {
+          align-items: center;
+        }
+      }
+
+      td {
+        white-space: break-spaces;
+      }
+    }
+  }
+}

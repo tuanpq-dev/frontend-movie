@@ -75,12 +75,16 @@ export const showSuccessToast = (
     });
 };
 
-export const showErrorToast = () => {
+export const showErrorToast = (
+    title = "Thất bại",
+    message = "Có lỗi xảy ra",
+    duration = 5000,
+) => {
     toast({
-        title: "Thất bại",
-        message: "Có lỗi xảy ra",
+        title: title,
+        message: message,
         type: "error",
-        duration: 5000,
+        duration: duration,
     });
 };
 const Toast = () => {

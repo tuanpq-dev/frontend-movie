@@ -11,11 +11,12 @@ import TVSeries from "@pages/TVSeries";
 import SearchPage from "@pages/SearchPage";
 import SignIn from "@pages/SignIn";
 import SignUp from "@pages/SignUp";
-import ManageMovie from "@pages/Admin/Movie/ManageMovie";
+// import ManageMovie from "@pages/Admin/Movie/ManageMovie";
 import CreateMovie from "@pages/Admin/Movie/CreateMovie";
 import EditMovie from "@pages/Admin/Movie/EditMovie";
 import UserProfile from "@pages/UserProfile";
 import ModalProvider from "./context/ModalProvider";
+import Toast from "./components/Toast/Toast";
 import ManageComment from "@pages/Admin/ManageComment";
 import ManageUser from "@pages/Admin/User/ManageUser";
 import EditUser from "@pages/Admin/User/EditUser";
@@ -25,6 +26,7 @@ import EditGenre from "@pages/Admin/Genre/EditGenre";
 import FavoriteList from "@pages/FavoriteList";
 import AdminRouter from "./AdminRouter";
 import VnPayReturn from "@pages/VNPayReturn";
+import ManageMovie2 from "@pages/Admin/Movie/ManageMovie2";
 const router = createBrowserRouter([
     {
         element: <Root />,
@@ -73,7 +75,7 @@ const router = createBrowserRouter([
     },
     {
         path: "/admin/movie",
-        element: <AdminRouter element={<ManageMovie />} />,
+        element: <AdminRouter element={<ManageMovie2 />} />,
     },
     {
         path: "/admin/movie/create",
@@ -116,6 +118,7 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")).render(
     <StrictMode>
         <ModalProvider>
+            <Toast />
             <RouterProvider router={router} />
         </ModalProvider>
     </StrictMode>,

@@ -1,115 +1,141 @@
 import { useMemo, useState, useEffect } from "react";
-import Modal from "@components/Modal";
 import SideBar from "@components/SideBar";
-import {
-    faEdit,
-    faMagnifyingGlass,
-    faTrash,
-} from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { Button, Table } from "antd";
+import { Button, Table, Input, Space, Popconfirm, message } from "antd";
+import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 const ManageMovie = () => {
     const token = Cookies.get("accessToken");
     const [movies, setMovies] = useState([]);
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                // Gửi yêu cầu với Authorization header chứa JWT
-                const response = await axios.get(
-                    "http://localhost:8080/api/movies",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    },
-                );
-
-                setMovies(response.data);
-                console.log(response.data);
-            } catch (error) {
-                console.error("Error fetching Users:", error);
-            }
-        };
-
-        fetchUsers(); // Gọi hàm để lấy dữ liệu khi component mount
-    }, []);
-    const [showModal, setShowModal] = useState(false);
-    const [deletedMovieId, setDeletedMovieId] = useState("");
-    const [modalContent, setModalContent] = useState("");
     const [searchText, setSearchText] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [sidebarLoaded, setSidebarLoaded] = useState(false);
     const navigate = useNavigate();
 
-    const filteredMovies = useMemo(() => {
-        return movies.filter((movie) => {
-            return (movie?.originName ?? "").includes(searchText);
-        });
-    }, [searchText, movies]);
+    useEffect(() => {
+        fetchMovies();
+    }, []);
 
-    const [sidebarLoaded, setSidebarLoaded] = useState(false);
+    const fetchMovies = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(
+                "http://localhost:8080/api/movies",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                },
+            );
+            setMovies(response.data);
+        } catch (error) {
+            message.error("Lỗi khi tải danh sách phim");
+            console.error("Error fetching movies:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id, name) => {
+        try {
+            await axios.delete(`http://localhost:8080/api/movies/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            message.success(`Đã xóa phim "${name}"`);
+            fetchMovies();
+        } catch (error) {
+            message.error("Lỗi khi xóa phim");
+            console.error("Error deleting movie:", error);
+        }
+    };
 
     const handleSidebarLoadComplete = () => {
-        setSidebarLoaded(true); // Cập nhật trạng thái khi sidebar đã tải xong
+        setSidebarLoaded(true);
     };
+
+    const filteredMovies = useMemo(() => {
+        return movies.filter((movie) =>
+            (movie?.originName ?? "")
+                .toLowerCase()
+                .includes(searchText.toLowerCase()),
+        );
+    }, [searchText, movies]);
 
     const columns = [
         {
             title: "STT",
-            dataIndex: "index",
             key: "index",
-            render: (text, record, index) => index + 1,
-        },
-        {
-            title: "Tên phim",
-            dataIndex: "originName",
-            key: "originName",
+            width: 60,
+            align: "center",
+            render: (_, __, index) => index + 1,
         },
         {
             title: "Poster",
             dataIndex: "posterUrl",
             key: "posterUrl",
-            render: (url) =>
-                url ? (
-                    <img
-                        src={`http://localhost:8080/images/movies/${url}`}
-                        alt="Poster"
-                        className="h-28 w-28 rounded object-cover"
-                    />
-                ) : (
-                    "/img-placeholder.jpg"
-                ),
+            width: 100,
+            render: (url) => (
+                <img
+                    src={
+                        url
+                            ? `http://localhost:8080/images/movies/${url}`
+                            : "/img-placeholder.jpg"
+                    }
+                    alt="Poster"
+                    className="h-20 w-16 rounded object-cover"
+                />
+            ),
+        },
+        {
+            title: "Tên phim",
+            dataIndex: "originName",
+            key: "originName",
+            ellipsis: true,
         },
         {
             title: "Thời gian",
             dataIndex: "time",
             key: "time",
+            width: 100,
         },
         {
-            title: "Năm phát hành",
+            title: "Năm",
             dataIndex: "year",
             key: "year",
+            width: 80,
+            align: "center",
         },
         {
             title: "Thể loại",
             dataIndex: "genres",
             key: "genres",
-            render: (genres) => genres.map((g) => g.nameGenre).join(", "),
+            width: 200,
+            ellipsis: true,
+            render: (genres) => genres?.map((g) => g.nameGenre).join(", "),
         },
         {
             title: "Đạo diễn",
             dataIndex: "director",
             key: "director",
+            width: 150,
+            ellipsis: true,
         },
         {
             title: "Hành động",
             key: "action",
+            width: 150,
+            fixed: "right",
             render: (_, record) => (
-                <div className="flex gap-2">
+                <Space>
                     <Button
                         type="primary"
+                        size="small"
                         icon={<FontAwesomeIcon icon={faEdit} />}
                         onClick={() =>
                             navigate(`/admin/movie/edit/${record._id}`)
@@ -117,112 +143,79 @@ const ManageMovie = () => {
                     >
                         Sửa
                     </Button>
-                    <Button
-                        danger
-                        icon={<FontAwesomeIcon icon={faTrash} />}
-                        onClick={() => {
-                            setShowModal(true);
-                            setDeletedMovieId(record._id);
-                            setModalContent(`phim "${record.originName}"`);
-                        }}
+                    <Popconfirm
+                        title="Xóa phim"
+                        description={`Bạn có chắc muốn xóa "${record.originName}"?`}
+                        onConfirm={() =>
+                            handleDelete(record._id, record.originName)
+                        }
+                        okText="Xóa"
+                        cancelText="Hủy"
+                        okButtonProps={{ danger: true }}
                     >
-                        Xóa
-                    </Button>
-                </div>
+                        <Button
+                            danger
+                            size="small"
+                            icon={<FontAwesomeIcon icon={faTrash} />}
+                        >
+                            Xóa
+                        </Button>
+                    </Popconfirm>
+                </Space>
             ),
         },
     ];
 
     return (
-        <div className="flex">
-            <SideBar
-                onLoadComplete={handleSidebarLoadComplete}
-                className="flex-1"
-            />
+        <div className="flex min-h-screen bg-gray-50">
+            <SideBar onLoadComplete={handleSidebarLoadComplete} />
             {sidebarLoaded && (
-                <section className="flex-[4]">
-                    <h1 className="mt-10 bg-[#f4f6f9] px-2 py-2 text-3xl">
-                        Quản lý phim
-                    </h1>
-                    <div className="mt-3 border border-[#00000020] p-4 shadow-sm shadow-[#00000033]">
-                        <div className="flex justify-between border border-transparent border-b-[#00000020] pb-6">
-                            <form action="" className="flex items-center gap-1">
-                                <div className="flex h-10 w-64 items-center justify-between rounded-lg border border-[#d2d1d6] px-3 focus-within:border-[#77dae6]">
-                                    <input
-                                        type="text"
-                                        name=""
-                                        id=""
-                                        placeholder="Nhập từ khóa tìm kiếm"
-                                        className="h-full w-full"
-                                        value={searchText}
-                                        onChange={(e) => {
-                                            setSearchText(e.target.value);
-                                        }}
-                                    />
-                                    <FontAwesomeIcon
-                                        icon={faMagnifyingGlass}
-                                        className="ml-2"
-                                    />
-                                </div>
-                                {/* <button className="h-10 rounded-lg bg-[#007bff] px-2 text-white">
-                                Tìm kiếm
-                            </button> */}
-                            </form>
-                            <div className="flex gap-2">
-                                <a
-                                    href="/admin/movie/create"
-                                    className="flex h-10 items-center justify-center rounded-lg bg-[#007bff] px-2 text-white"
-                                >
-                                    Thêm mới
-                                </a>
-                            </div>
-                        </div>
-
-                        <Table
-                            dataSource={filteredMovies}
-                            columns={columns}
-                            components={{
-                                header: {
-                                    cell: ({ children, ...rest }) => (
-                                        <th
-                                            {...rest}
-                                            style={{
-                                                fontWeight: "bolder",
-                                                fontSize: "16px",
-                                                textWrap: "nowrap",
-                                            }}
-                                        >
-                                            {children}
-                                        </th>
-                                    ),
-                                },
-                                body: {
-                                    cell: ({ children, ...rest }) => (
-                                        <td
-                                            {...rest}
-                                            style={{ fontSize: "16px" }}
-                                        >
-                                            {children}
-                                        </td>
-                                    ),
-                                },
+                <div className="flex-1 p-6">
+                    <div className="mb-6">
+                        <h1 className="mb-4 text-3xl font-bold text-gray-800">
+                            Quản lý phim
+                        </h1>
+                        <Space
+                            style={{
+                                width: "100%",
+                                justifyContent: "space-between",
                             }}
-                            pagination={{
-                                pageSize: 5,
-                            }}
-                        />
+                        >
+                            <Input
+                                placeholder="Tìm kiếm theo tên phim..."
+                                prefix={<SearchOutlined />}
+                                value={searchText}
+                                onChange={(e) => setSearchText(e.target.value)}
+                                style={{ width: 300 }}
+                                size="large"
+                                allowClear
+                            />
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => navigate("/admin/movie/create")}
+                                size="large"
+                            >
+                                Thêm phim mới
+                            </Button>
+                        </Space>
                     </div>
 
-                    {showModal && (
-                        <Modal
-                            setShowModal={setShowModal}
-                            deleteId={deletedMovieId}
-                            content={modalContent}
-                            router={"http://localhost:8080/api/movies/"}
-                            token={token}
+                    <div className="rounded-lg bg-white p-4 shadow">
+                        <Table
+                            columns={columns}
+                            dataSource={filteredMovies}
+                            rowKey="_id"
+                            loading={loading}
+                            pagination={{
+                                pageSize: 10,
+                                showSizeChanger: true,
+                                showTotal: (total) => `Tổng ${total} phim`,
+                            }}
+                            scroll={{ x: 1200 }}
                         />
-                    )}
-                </section>
+                    </div>
+                </div>
             )}
         </div>
     );

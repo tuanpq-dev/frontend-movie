@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
+import Toast from "@components/Toast/Toast";
 
 const Root = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -17,17 +18,20 @@ const Root = () => {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const token = Cookies.get("accessToken");// Lấy accessToken từ cookie
+                const token = Cookies.get("accessToken"); // Lấy accessToken từ cookie
                 if (token) {
                     setIsLoggedIn(true);
                     const decodedToken = jwt_decode(token); // Giải mã accessToken
                     setId(decodedToken.id);
 
-                    const response = await axios.get(`http://localhost:8080/api/users/find/${id}`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
+                    const response = await axios.get(
+                        `http://localhost:8080/api/users/find/${id}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
                         },
-                    });
+                    );
                     const userData = response.data;
                     // Cập nhật state với dữ liệu người dùng
 
@@ -35,10 +39,8 @@ const Root = () => {
                     setEmail(userData.email);
                     setAvatar(userData.avatar);
                     console.log(userName, email, avatar);
-
-                }
-                else {
-                    setIsLoggedIn(false)
+                } else {
+                    setIsLoggedIn(false);
                 }
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu người dùng:", error);
@@ -48,8 +50,13 @@ const Root = () => {
     }, [isLoggedIn]); // Chạy khi component mount
     return (
         <div>
+            <Toast />
             {isLoggedIn ? (
-                <HeaderLogined username={userName} email={email} avatar={avatar} />
+                <HeaderLogined
+                    username={userName}
+                    email={email}
+                    avatar={avatar}
+                />
             ) : (
                 <Header />
             )}
