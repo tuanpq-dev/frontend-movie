@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "@libs/config";
 
 const CreateMovie = () => {
     const navigate = useNavigate();
@@ -52,16 +53,12 @@ const CreateMovie = () => {
             alert("Chưa thêm thể loại");
             return;
         }
-        const response = await axios.post(
-            `http://localhost:8080/api/movies`,
-            formData,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "multipart/form-data",
-                },
+        const response = await axios.post(`${API_URL}/api/movies`, formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "multipart/form-data",
             },
-        );
+        });
 
         console.log(response);
         // Log dữ liệu trong formData

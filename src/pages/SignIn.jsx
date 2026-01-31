@@ -4,6 +4,7 @@ import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { validateEmail } from "../libs/utils/emailValidator";
 import { showSuccessToast, showErrorToast } from "../components/Toast/Toast";
+import { API_URL } from "../libs/config";
 
 /* -------------------- InputField -------------------- */
 const InputField = ({
@@ -102,7 +103,7 @@ const SignIn = () => {
             setLoading(true);
 
             const { data } = await axios.post(
-                "http://localhost:8080/api/auth/login",
+                `${API_URL}/api/auth/login`,
                 form,
             );
 

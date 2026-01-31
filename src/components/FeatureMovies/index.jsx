@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Movie from "./Movie";
 import Spinner from "@components/Spinner";
 import axios from "axios";
+import { API_URL } from "@libs/config";
 
 const FeatureMovies = () => {
     const [movies, setMovies] = useState([]);
@@ -11,9 +12,7 @@ const FeatureMovies = () => {
         const fetchUsers = async () => {
             try {
                 // Gửi yêu cầu với Authorization header chứa JWT
-                const response = await axios.get(
-                    "http://localhost:8080/api/movies",
-                );
+                const response = await axios.get(`${API_URL}/api/movies`);
 
                 setMovies(response.data);
                 console.log(response.data);

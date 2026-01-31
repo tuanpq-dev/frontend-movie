@@ -20,6 +20,7 @@ import SideBar from "@components/SideBar";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
+import { API_URL } from "@libs/config";
 
 // Create context for modal actions
 const UserModalContext = createContext({});
@@ -38,7 +39,7 @@ const ImageUpload = ({ value, onChange, currentImage, folder = "users" }) => {
         setLoading(true);
         try {
             const response = await axios.post(
-                `http://localhost:8080/api/upload/${folder}`,
+                `${API_URL}/api/upload/${folder}`,
                 formData,
                 {
                     headers: {
@@ -74,7 +75,7 @@ const ImageUpload = ({ value, onChange, currentImage, folder = "users" }) => {
             >
                 {displayUrl ? (
                     <img
-                        src={`http://localhost:8080/images/${folder}/${displayUrl}`}
+                        src={`${API_URL}/images/${folder}/${displayUrl}`}
                         alt="preview"
                         style={{
                             width: "100%",
@@ -107,7 +108,7 @@ const ActionColumn = ({ record }) => {
 
     const handleDelete = async (id, name) => {
         try {
-            await axios.delete(`http://localhost:8080/api/users/${id}`, {
+            await axios.delete(`${API_URL}/api/users/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -184,7 +185,7 @@ const ManageUser = () => {
                 <img
                     src={
                         url
-                            ? `http://localhost:8080/images/users/${url}`
+                            ? `${API_URL}/images/users/${url}`
                             : "/img-placeholder.jpg"
                     }
                     alt="Avatar"
@@ -258,7 +259,7 @@ const ManageUser = () => {
                         </div>
                         <div className="overflow-x-auto rounded-lg bg-white p-2 shadow sm:p-3 md:p-4">
                             <DataTableWrapper
-                                url="http://localhost:8080/api/users"
+                                url={`${API_URL}/api/users`}
                                 columns={columns}
                                 toolbars={toolbars}
                                 rowKey="_id"
@@ -274,8 +275,8 @@ const ManageUser = () => {
                                     formType={editingUser ? "edit" : "create"}
                                     resource={
                                         editingUser
-                                            ? `http://localhost:8080/api/users/${editingUser._id}`
-                                            : "http://localhost:8080/api/users"
+                                            ? `${API_URL}/api/users/${editingUser._id}`
+                                            : `${API_URL}/api/users`
                                     }
                                     method={editingUser ? "PUT" : "POST"}
                                     title={

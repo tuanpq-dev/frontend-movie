@@ -2,6 +2,7 @@ import MovieCard from "@components/MediaList/MovieCard";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
+import { API_URL } from "@libs/config";
 
 const FavoriteList = () => {
     const [movieList, setMovieList] = useState([]);
@@ -14,7 +15,7 @@ const FavoriteList = () => {
             try {
                 // Gửi yêu cầu GET để lấy danh sách phim yêu thích
                 const response = await axios.get(
-                    "http://localhost:8080/api/favoriteMovies",
+                    `${API_URL}/api/favoriteMovies`,
                     {
                         headers: {
                             Authorization: `Bearer ${Cookies.get("accessToken")}`, // Đảm bảo token đã được lưu trong localStorage
@@ -47,7 +48,7 @@ const FavoriteList = () => {
         try {
             // Gọi API xóa phim khỏi danh sách yêu thích
             const response = await axios.delete(
-                `http://localhost:8080/api/favoriteMovies/deleteMovieId/${id}`,
+                `${API_URL}/api/favoriteMovies/deleteMovieId/${id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${Cookies.get("accessToken")}`, // Đảm bảo token được lưu ở localStorage
@@ -82,7 +83,7 @@ const FavoriteList = () => {
                                     name={movie.originName}
                                     posterUrl={
                                         movie.posterUrl
-                                            ? `http://localhost:8080/images/movies/${movie.posterUrl}`
+                                            ? `${API_URL}/images/movies/${movie.posterUrl}`
                                             : "/img-placeholder.jpg"
                                     }
                                     year={movie.year}

@@ -3,6 +3,7 @@ import CommentForm from "./CommentForm";
 import Comment from "./Comment";
 import Cookies from "js-cookie";
 import axios from "axios";
+import { API_URL } from "@libs/config";
 
 const Comments = ({ movieId, userId, onLoadComplete }) => {
     const [loading, setLoading] = useState(true);
@@ -28,7 +29,7 @@ const Comments = ({ movieId, userId, onLoadComplete }) => {
                 };
 
                 response = await axios.post(
-                    `http://localhost:8080/api/comments`,
+                    `${API_URL}/api/comments`,
                     comment,
                     {
                         headers: {
@@ -43,7 +44,7 @@ const Comments = ({ movieId, userId, onLoadComplete }) => {
                 };
 
                 response = await axios.post(
-                    `http://localhost:8080/api/comments/replies`,
+                    `${API_URL}/api/comments/replies`,
                     replies,
                     {
                         headers: {
@@ -67,7 +68,7 @@ const Comments = ({ movieId, userId, onLoadComplete }) => {
     const updateComment = async (text, commentId) => {
         try {
             await axios.put(
-                `http://localhost:8080/api/comments/${commentId}`,
+                `${API_URL}/api/comments/${commentId}`,
                 { content: text },
                 {
                     headers: {
@@ -97,14 +98,11 @@ const Comments = ({ movieId, userId, onLoadComplete }) => {
             )
         ) {
             try {
-                await axios.delete(
-                    `http://localhost:8080/api/comments/${commentId}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
+                await axios.delete(`${API_URL}/api/comments/${commentId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
                     },
-                );
+                });
 
                 fetchComments();
             } catch (err) {
@@ -117,7 +115,7 @@ const Comments = ({ movieId, userId, onLoadComplete }) => {
         try {
             if (userId) {
                 const response = await axios.get(
-                    `http://localhost:8080/api/comments/${movieId}`,
+                    `${API_URL}/api/comments/${movieId}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,

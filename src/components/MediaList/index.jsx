@@ -1,4 +1,5 @@
 import MovieCard from "./MovieCard";
+import { API_URL } from "@libs/config";
 
 const MediaList = ({ movies = [], title }) => {
     return (
@@ -13,7 +14,7 @@ const MediaList = ({ movies = [], title }) => {
                         name={movie.originName}
                         posterUrl={
                             movie.posterUrl
-                                ? `http://localhost:8080/images/movies/${movie.posterUrl}`
+                                ? `${API_URL}/images/movies/${movie.posterUrl}`
                                 : "/img-placeholder.jpg"
                         }
                         year={movie.year}

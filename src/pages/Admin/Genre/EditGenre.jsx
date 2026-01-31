@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import SideBar from "@components/SideBar";
-import axios from 'axios'
+import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "@libs/config";
 
 const EditGenre = () => {
     const { handleSubmit, register, reset, setValue } = useForm();
@@ -13,16 +14,12 @@ const EditGenre = () => {
     const token = Cookies.get("accessToken");
     const onSubmit = async (data) => {
         try {
-            const response = await axios.put(
-                "http://localhost:8080/api/genres/",
-                data,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    },
-                }
-            );
-            navigate("/admin/genre")
+            const response = await axios.put(`${API_URL}/api/genres/`, data, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            navigate("/admin/genre");
         } catch (error) {
             console.error("Error updating genre:", error);
         }
@@ -35,7 +32,9 @@ const EditGenre = () => {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const response = await axios.get(`http://localhost:8080/api/genres/find/${id}`);
+                const response = await axios.get(
+                    `${API_URL}/api/genres/find/${id}`,
+                );
                 const genreData = response.data;
                 // Cập nhật state với dữ liệu người dùng
                 setNameGenre(genreData.nameGenre);
@@ -43,7 +42,6 @@ const EditGenre = () => {
 
                 setValue("nameGenre", genreData.nameGenre);
                 setValue("desc", genreData.desc);
-
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu người dùng:", error);
             }

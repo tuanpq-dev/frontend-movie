@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { validateEmail } from "../libs/utils/emailValidator";
 import { showSuccessToast, showErrorToast } from "../components/Toast/Toast";
+import { API_URL } from "../libs/config";
 
 const SignIn = () => {
     const navigate = useNavigate();
@@ -49,14 +50,11 @@ const SignIn = () => {
         if (hasError) return;
 
         try {
-            const response = await axios.post(
-                "http://localhost:8080/api/auth/register",
-                {
-                    username: formData.username,
-                    email: formData.email,
-                    password: formData.password,
-                },
-            );
+            const response = await axios.post(`${API_URL}/api/auth/register`, {
+                username: formData.username,
+                email: formData.email,
+                password: formData.password,
+            });
 
             if (response.status === 201) {
                 showSuccessToast(

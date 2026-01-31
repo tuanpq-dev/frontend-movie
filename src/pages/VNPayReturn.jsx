@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
+import { API_URL } from "@libs/config";
 
 const VnPayReturn = () => {
     const [searchParams] = useSearchParams();
@@ -11,7 +12,7 @@ const VnPayReturn = () => {
         const verifyPayment = async () => {
             try {
                 const { data } = await axios.get(
-                    "http://localhost:8080/api/payment/payment_return",
+                    `${API_URL}/api/payment/payment_return`,
                     {
                         params: Object.fromEntries(searchParams.entries()),
                     },

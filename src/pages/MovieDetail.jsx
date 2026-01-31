@@ -12,6 +12,7 @@ import jwt_decode from "jwt-decode";
 import Toast from "@components/Toast/Toast";
 import { showSuccessToast } from "@components/Toast/Toast";
 import PaymentModal from "@components/PaymentModal";
+import { API_URL } from "@libs/config";
 
 const MovieDetail = () => {
     const { id } = useParams();
@@ -25,9 +26,7 @@ const MovieDetail = () => {
     useEffect(() => {
         const fetchMovie = async () => {
             try {
-                const response = await axios.get(
-                    `http://localhost:8080/api/movies/${id}`,
-                );
+                const response = await axios.get(`${API_URL}/api/movies/${id}`);
                 setMovieInfo(response.data);
                 if (token) {
                     const decodedToken = jwt_decode(token);
@@ -50,7 +49,7 @@ const MovieDetail = () => {
             }
 
             const response = await axios.post(
-                "http://localhost:8080/api/favoriteMovies",
+                `${API_URL}/api/favoriteMovies`,
                 { movieIds },
                 {
                     headers: {
@@ -99,7 +98,7 @@ const MovieDetail = () => {
     const handleWatchMovie = async () => {
         try {
             const response = await axios.get(
-                `http://localhost:8080/api/payment/payment-status/${userId}`,
+                `${API_URL}/api/payment/payment-status/${userId}`,
             );
             console.log("Kết quả kiểm tra thanh toán:", response.data);
             if (response.data.paid) {
@@ -126,7 +125,7 @@ const MovieDetail = () => {
         setIsLoading(true);
         try {
             const { data } = await axios.post(
-                "http://localhost:8080/api/payment/create_payment",
+                `${API_URL}/api/payment/create_payment`,
                 { userId },
             );
             window.open(data.paymentUrl, "_blank");
@@ -162,7 +161,7 @@ const MovieDetail = () => {
                             <img
                                 src={
                                     movieInfo.thumbUrl
-                                        ? `http://localhost:8080/images/movies/${movieInfo.thumbUrl}`
+                                        ? `${API_URL}/images/movies/${movieInfo.thumbUrl}`
                                         : "/img-placeholder.jpg"
                                 }
                                 width={1280}
@@ -174,7 +173,7 @@ const MovieDetail = () => {
                             <img
                                 src={
                                     movieInfo.posterUrl
-                                        ? `http://localhost:8080/images/movies/${movieInfo.posterUrl}`
+                                        ? `${API_URL}/images/movies/${movieInfo.posterUrl}`
                                         : "/img-placeholder.jpg"
                                 }
                                 width={200}

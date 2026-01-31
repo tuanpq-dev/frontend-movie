@@ -12,6 +12,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
+import { API_URL } from "@libs/config";
 
 const SideBar = ({ onLoadComplete }) => {
     const [userData, setUserData] = useState(null);
@@ -56,7 +57,7 @@ const SideBar = ({ onLoadComplete }) => {
                 }
 
                 const response = await axios.get(
-                    `http://localhost:8080/api/users/find/${userId}`,
+                    `${API_URL}/api/users/find/${userId}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -149,7 +150,7 @@ const SideBar = ({ onLoadComplete }) => {
                         <img
                             src={
                                 userData?.profilePic
-                                    ? `http://localhost:8080/images/users/${userData.profilePic}`
+                                    ? `${API_URL}/images/users/${userData.profilePic}`
                                     : "https://www.speak2university.com/assets/admin/dist/img/user-avatar.png"
                             }
                             className="h-10 w-10 rounded-full object-cover ring-2 ring-gray-200"

@@ -1,6 +1,7 @@
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 import "@components/FeatureMovies/carousel.css";
+import { API_URL } from "@libs/config";
 
 const responsive = {
     desktop: {
@@ -17,18 +18,29 @@ const responsive = {
 
 const Movie = ({ movies }) => {
     return (
-        <Carousel responsive={responsive} autoPlay={true} autoPlaySpeed={4000} infinite={true}>
+        <Carousel
+            responsive={responsive}
+            autoPlay={true}
+            autoPlaySpeed={4000}
+            infinite={true}
+        >
             {movies.map((movie) => (
                 <div key={movie._id} className="h-full w-full">
                     <img
-                        src={movie?.thumbUrl ? `http://localhost:8080/images/movies/${movie.thumbUrl}` : "/img-placeholder.jpg"}
+                        src={
+                            movie?.thumbUrl
+                                ? `${API_URL}/images/movies/${movie.thumbUrl}`
+                                : "/img-placeholder.jpg"
+                        }
                         width={634}
                         height={357}
                         className="h-full w-full object-cover brightness-50"
                     />
                     <div className="absolute bottom-[15%] left-8">
                         <div>
-                            <h3 className="mb-1 text-xl font-bold">{movie?.originName}</h3>
+                            <h3 className="mb-1 text-xl font-bold">
+                                {movie?.originName}
+                            </h3>
                             <p className="text-lg">{movie?.year}</p>
                         </div>
                         <div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { API_URL } from "@libs/config";
 
 const GenresInput = ({ onChange, value = [] }) => {
     const [genres, setGenres] = useState([]);
@@ -7,9 +8,7 @@ const GenresInput = ({ onChange, value = [] }) => {
         // Gọi API để lấy dữ liệu
         const fetchGenres = async () => {
             try {
-                const response = await axios.get(
-                    "http://localhost:8080/api/genres",
-                );
+                const response = await axios.get(`${API_URL}/api/genres`);
                 setGenres(response.data); // Thay thế toàn bộ state bằng dữ liệu từ API
             } catch (error) {
                 console.error("Error fetching genres:", error);

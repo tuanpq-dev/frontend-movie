@@ -7,6 +7,7 @@ import Cookies from "js-cookie";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
 import Toast from "@components/Toast/Toast";
+import { API_URL } from "@libs/config";
 
 const Root = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -25,7 +26,7 @@ const Root = () => {
                     setId(decodedToken.id);
 
                     const response = await axios.get(
-                        `http://localhost:8080/api/users/find/${id}`,
+                        `${API_URL}/api/users/find/${id}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,

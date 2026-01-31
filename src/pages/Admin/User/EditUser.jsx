@@ -7,6 +7,7 @@ import { useParams } from "react-router-dom";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "@libs/config";
 
 const EditUser = () => {
     const navigate = useNavigate();
@@ -16,27 +17,31 @@ const EditUser = () => {
     const [email, setEmail] = useState("");
     const [avatarPreview, setAvatarPreview] = useState("");
 
-
-
     // Hàm fetch dữ liệu người dùng từ API
     useEffect(() => {
         const fetchUser = async () => {
             try {
                 const token = Cookies.get("accessToken");
-                const response = await axios.get(`http://localhost:8080/api/users/find/${id}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
+                const response = await axios.get(
+                    `${API_URL}/api/users/find/${id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
                     },
-                });
+                );
                 const userData = response.data;
                 // Cập nhật state với dữ liệu người dùng
                 setUserName(userData.username);
                 setEmail(userData.email);
-                setAvatarPreview(userData.avatar ? "http://localhost:8080/images/avatar/" + userData.avatar : "/img-placeholder.jpg"); // Nếu có avatar từ DB
+                setAvatarPreview(
+                    userData.avatar
+                        ? `${API_URL}/images/avatar/` + userData.avatar
+                        : "/img-placeholder.jpg",
+                ); // Nếu có avatar từ DB
                 setValue("username", userData.username);
                 setValue("email", userData.email);
                 setValue("isAdmin", userData.isAdmin);
-
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu người dùng:", error);
             }
@@ -58,26 +63,25 @@ const EditUser = () => {
 
             // Nếu có ảnh mới, thêm file vào formData
             if (data.avatar) {
-                formData.append("avatar", data.avatar[0]);  // data.avatar[0] vì file là array
+                formData.append("avatar", data.avatar[0]); // data.avatar[0] vì file là array
             }
 
             const response = await axios.put(
-                "http://localhost:8080/api/users/",
+                `${API_URL}/api/users/`,
                 formData,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
-                        "Content-Type": "multipart/form-data",  // Đảm bảo header phù hợp
+                        "Content-Type": "multipart/form-data", // Đảm bảo header phù hợp
                     },
-                }
+                },
             );
 
-            navigate("/admin/user")
+            navigate("/admin/user");
         } catch (error) {
             console.error("Error updating user:", error);
         }
     };
-
 
     const handleChangeAvatar = (e) => {
         const file = e.target.files[0];

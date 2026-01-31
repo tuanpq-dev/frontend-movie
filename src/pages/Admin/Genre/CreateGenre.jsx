@@ -4,6 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { useState } from "react";
+import { API_URL } from "@libs/config";
 
 const CreateGenre = () => {
     const { handleSubmit, register, reset } = useForm();
@@ -14,15 +15,13 @@ const CreateGenre = () => {
     const onSubmit = async (data) => {
         const token = Cookies.get("accessToken");
         try {
-            const response = await axios.post(`http://localhost:8080/api/genres`,
-                data,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+            const response = await axios.post(`${API_URL}/api/genres`, data, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
-            navigate("/admin/genre")
+            navigate("/admin/genre");
         } catch (err) {
             setError("Đăng ký thất bại, vui lòng thử lại.");
         }

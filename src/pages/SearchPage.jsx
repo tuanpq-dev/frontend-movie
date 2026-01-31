@@ -3,6 +3,7 @@ import Spinner from "@components/Spinner";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
+import { API_URL } from "@libs/config";
 
 const SearchPage = () => {
     const [searchText, setSearchText] = useState("");
@@ -14,7 +15,9 @@ const SearchPage = () => {
         setIsLoading(true);
 
         try {
-            const res = await fetch(`http://localhost:8080/api/movies?originName=${(searchText)}`);
+            const res = await fetch(
+                `${API_URL}/api/movies?originName=${searchText}`,
+            );
             if (!res.ok) {
                 throw new Error("Có lỗi xảy ra khi tìm kiếm phim!");
             }
@@ -30,7 +33,10 @@ const SearchPage = () => {
     return (
         <div className="min-h-[40vh] bg-[#292e39] px-5 py-3 text-white lg:py-5">
             <div className="mx-auto max-w-screen-xl">
-                <form onSubmit={handleSearch} className="flex items-center gap-2">
+                <form
+                    onSubmit={handleSearch}
+                    className="flex items-center gap-2"
+                >
                     <div className="flex h-12 w-full items-center rounded-lg border-[2px] border-solid border-[#d2d1d6] px-3 sm:w-1/2 xl:w-1/3">
                         <input
                             type="text"
@@ -55,7 +61,11 @@ const SearchPage = () => {
                         className="flex h-[52px] items-center justify-center rounded-lg bg-[#0d6efd] px-5"
                         type="submit"
                     >
-                        <img src="/search.svg" alt="Search" className="invert" />
+                        <img
+                            src="/search.svg"
+                            alt="Search"
+                            className="invert"
+                        />
                     </button>
                     <div className="bg-red-50"></div>
                 </form>
@@ -68,7 +78,11 @@ const SearchPage = () => {
                             <MovieCard
                                 key={media._id}
                                 name={media.originName}
-                                posterUrl={media.posterUrl ? `http://localhost:8080/images/movies/${media.posterUrl}` : "/img-placeholder.jpg"}
+                                posterUrl={
+                                    media.posterUrl
+                                        ? `${API_URL}/images/movies/${media.posterUrl}`
+                                        : "/img-placeholder.jpg"
+                                }
                                 year={media.year}
                                 time={media.time}
                                 type={media.type}

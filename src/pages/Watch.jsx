@@ -1,6 +1,7 @@
 import Hls from "hls.js";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { API_URL } from "@libs/config";
 
 const Watch = () => {
     const { id } = useParams();
@@ -10,18 +11,14 @@ const Watch = () => {
     const [currentChap, setCurrentChap] = useState(0);
 
     useEffect(() => {
-        fetch(`http://localhost:8080/api/movies/${id}`).then(
-            async (res) => {
-                const data = await res.json();
-                setChapterList(data.episodes || []);
-                setSrcMovie(
-                    data.episodes?.[currentChap]?.video || ""
-                );
-                console.log(data.episodes?.[currentChap]?.video);
+        fetch(`${API_URL}/api/movies/${id}`).then(async (res) => {
+            const data = await res.json();
+            setChapterList(data.episodes || []);
+            setSrcMovie(data.episodes?.[currentChap]?.video || "");
+            console.log(data.episodes?.[currentChap]?.video);
 
-                setMovieInfo(data);
-            },
-        );
+            setMovieInfo(data);
+        });
     }, [id, currentChap]);
 
     useEffect(() => {
@@ -76,15 +73,15 @@ const Watch = () => {
                                     {chapterList.map((chap, index) => (
                                         <li
                                             key={chap.video}
-                                            className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg ${currentChap === index
-                                                ? "bg-green-700"
-                                                : "bg-[#292e39]"
-                                                }`}
+                                            className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg ${
+                                                currentChap === index
+                                                    ? "bg-green-700"
+                                                    : "bg-[#292e39]"
+                                            }`}
                                             onClick={() => {
                                                 setCurrentChap(index);
                                                 setSrcMovie(
-                                                    chapterList[index]
-                                                        .video,
+                                                    chapterList[index].video,
                                                 );
                                             }}
                                         >

@@ -2,6 +2,7 @@ import MediaList from "@components/MediaList";
 import { MEDIA_TABS } from "@libs/constants";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { API_URL } from "@libs/config";
 
 const SingleMovie = () => {
     const [movies, setMovies] = useState([]);
@@ -10,7 +11,7 @@ const SingleMovie = () => {
         const fetchMovies = async () => {
             try {
                 // Gửi yêu cầu để lấy toàn bộ danh sách phim
-                const response = await axios.get("http://localhost:8080/api/movies");
+                const response = await axios.get(`${API_URL}/api/movies`);
                 setMovies(response.data); // Lưu toàn bộ danh sách phim
             } catch (error) {
                 console.error("Error fetching movies:", error);
@@ -21,9 +22,8 @@ const SingleMovie = () => {
     }, []);
     useEffect(() => {
         // Lọc phim có type là "single"
-        const filterSingle = movies.filter(movie => movie.type === "single");
+        const filterSingle = movies.filter((movie) => movie.type === "single");
         setFilteredMovieSingles(filterSingle);
-
     }, [movies]);
     return (
         <div className="min-h-screen bg-[#292e39]">

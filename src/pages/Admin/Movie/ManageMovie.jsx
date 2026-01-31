@@ -7,6 +7,7 @@ import Cookies from "js-cookie";
 import { Button, Table, Input, Space, Popconfirm, message } from "antd";
 import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "@libs/config";
 
 const ManageMovie = () => {
     const token = Cookies.get("accessToken");
@@ -23,14 +24,11 @@ const ManageMovie = () => {
     const fetchMovies = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(
-                "http://localhost:8080/api/movies",
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+            const response = await axios.get(`${API_URL}/api/movies`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
                 },
-            );
+            });
             setMovies(response.data);
         } catch (error) {
             message.error("Lỗi khi tải danh sách phim");
@@ -42,7 +40,7 @@ const ManageMovie = () => {
 
     const handleDelete = async (id, name) => {
         try {
-            await axios.delete(`http://localhost:8080/api/movies/${id}`, {
+            await axios.delete(`${API_URL}/api/movies/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -84,7 +82,7 @@ const ManageMovie = () => {
                 <img
                     src={
                         url
-                            ? `http://localhost:8080/images/movies/${url}`
+                            ? `${API_URL}/images/movies/${url}`
                             : "/img-placeholder.jpg"
                     }
                     alt="Poster"

@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { showSuccessToast, showErrorToast } from "./Toast/Toast";
+import { API_URL } from "@libs/config";
 
 const ChangePasswordModal = ({ isOpen, onClose, userId }) => {
     const [currentPassword, setCurrentPassword] = useState("");
@@ -57,7 +58,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }) => {
 
         try {
             await axios.put(
-                "http://localhost:8080/api/users/change-password",
+                `${API_URL}/api/users/change-password`,
                 {
                     userId: userId,
                     oldPassword: currentPassword,

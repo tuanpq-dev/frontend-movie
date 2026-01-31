@@ -5,6 +5,7 @@ import Cookies from "js-cookie";
 import jwt_decode from "jwt-decode";
 
 import axios from "axios";
+import { API_URL } from "@libs/config";
 
 const HeaderLogined = ({ username, email, avatar }) => {
     const [showMenuDrawer, setShowMenuDrawer] = useState(false);
@@ -26,7 +27,7 @@ const HeaderLogined = ({ username, email, avatar }) => {
                 const decodedToken = jwt_decode(token);
 
                 const response = await axios.get(
-                    `http://localhost:8080/api/payment/payment-status/${decodedToken.id}`,
+                    `${API_URL}/api/payment/payment-status/${decodedToken.id}`,
                 );
 
                 setHasPaid(response.data.paid);
@@ -124,7 +125,7 @@ const HeaderLogined = ({ username, email, avatar }) => {
                 <img
                     src={
                         avatar
-                            ? "http://localhost:8080/images/avatar/" + avatar
+                            ? `${API_URL}/images/avatar/` + avatar
                             : "https://img.freepik.com/free-psd/3d-rendering-avatar_23-2150833560.jpg?w=740&t=st=1728638508~exp=1728639108~hmac=59fcbd89a8d344fb2797ab35306b6b539a477e5dd919d73e04bd449290c3a5f4"
                     }
                     alt=""
@@ -137,8 +138,7 @@ const HeaderLogined = ({ username, email, avatar }) => {
                             <img
                                 src={
                                     avatar
-                                        ? "http://localhost:8080/images/avatar/" +
-                                          avatar
+                                        ? `${API_URL}/images/avatar/` + avatar
                                         : "https://img.freepik.com/free-psd/3d-rendering-avatar_23-2150833560.jpg?w=740&t=st=1728638508~exp=1728639108~hmac=59fcbd89a8d344fb2797ab35306b6b539a477e5dd919d73e04bd449290c3a5f4"
                                 }
                                 alt=""

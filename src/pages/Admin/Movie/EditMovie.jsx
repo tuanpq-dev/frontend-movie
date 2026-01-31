@@ -10,6 +10,7 @@ import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
+import { API_URL } from "@libs/config";
 
 const EditMovie = () => {
     const { handleSubmit, register, control, setValue } = useForm();
@@ -17,10 +18,9 @@ const EditMovie = () => {
     const { id } = useParams();
     const token = Cookies.get("accessToken");
 
-
     const onSubmit = async (data) => {
         const formData = new FormData();
-        formData.append("_id", id)
+        formData.append("_id", id);
         formData.append("originName", data.originName);
         formData.append("slug", data.slug);
         formData.append("type", data.type);
@@ -42,19 +42,17 @@ const EditMovie = () => {
         formData.append("trailerKey", data.trailerKey);
         formData.append("episodes", JSON.stringify(data.episodes));
 
-        const response = await axios.put(`http://localhost:8080/api/movies`,
-            formData,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+        const response = await axios.put(`${API_URL}/api/movies`, formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "multipart/form-data",
+            },
+        });
         // Log dữ liệu trong formData
         for (const [key, value] of formData.entries()) {
             console.log(`${key}: ${value}`);
         }
-        navigate("/admin/movie")
+        navigate("/admin/movie");
     };
 
     const [originName, setOriginName] = useState("");
@@ -89,39 +87,47 @@ const EditMovie = () => {
     useEffect(() => {
         const fetchMovie = async () => {
             try {
-                const response = await axios.get(`http://localhost:8080/api/movies/${id}`);
-                const movieData = response.data
+                const response = await axios.get(`${API_URL}/api/movies/${id}`);
+                const movieData = response.data;
                 const genreIds = movieData.genres.map((genre) => genre._id);
                 console.log(genreIds);
 
                 // Cập nhật form với danh sách genreIds từ API
                 setValue("genres", genreIds);
                 setOriginName(movieData.originName);
-                setSlug(movieData.slug)
-                setContent(movieData.content)
-                setPosterPreview(movieData.posterUrl ? "http://localhost:8080/images/movies/" + movieData.posterUrl : movieData.posterUrl)
-                setThumbPreview(movieData.thumbUrl ? "http://localhost:8080/images/movies/" + movieData.thumbUrl : movieData.thumbUrl)
-                setYear(movieData.year)
-                setActor(movieData.actor)
-                setDirector(movieData.director)
-                setVoteAverage(movieData.voteAverage)
-                setTime(movieData.time)
-                setTrailerKey(movieData.trailerKey)
+                setSlug(movieData.slug);
+                setContent(movieData.content);
+                setPosterPreview(
+                    movieData.posterUrl
+                        ? `${API_URL}/images/movies/` + movieData.posterUrl
+                        : movieData.posterUrl,
+                );
+                setThumbPreview(
+                    movieData.thumbUrl
+                        ? `${API_URL}/images/movies/` + movieData.thumbUrl
+                        : movieData.thumbUrl,
+                );
+                setYear(movieData.year);
+                setActor(movieData.actor);
+                setDirector(movieData.director);
+                setVoteAverage(movieData.voteAverage);
+                setTime(movieData.time);
+                setTrailerKey(movieData.trailerKey);
 
                 setValue("type", movieData.type);
-                setValue("originName", movieData.originName)
-                setValue("slug", movieData.slug)
-                setValue("content", movieData.content)
-                setValue("posterUrl", movieData.posterUrl)
-                setValue("thumbUrl", movieData.thumbUrl)
-                setValue("year", movieData.year)
-                setValue("actor", movieData.actor)
-                setValue("director", movieData.director)
-                setValue("voteAverage", movieData.voteAverage)
-                setValue("time", movieData.time)
-                setValue("trailerKey", movieData.trailerKey)
-                setValue("episodes", movieData.episodes)
-                console.log(movieData.episodes)
+                setValue("originName", movieData.originName);
+                setValue("slug", movieData.slug);
+                setValue("content", movieData.content);
+                setValue("posterUrl", movieData.posterUrl);
+                setValue("thumbUrl", movieData.thumbUrl);
+                setValue("year", movieData.year);
+                setValue("actor", movieData.actor);
+                setValue("director", movieData.director);
+                setValue("voteAverage", movieData.voteAverage);
+                setValue("time", movieData.time);
+                setValue("trailerKey", movieData.trailerKey);
+                setValue("episodes", movieData.episodes);
+                console.log(movieData.episodes);
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu người dùng:", error);
             }
@@ -148,7 +154,6 @@ const EditMovie = () => {
                         autoComplete="off"
                         onSubmit={handleSubmit(onSubmit)}
                     >
-
                         <div className="mb-3">
                             <label
                                 htmlFor="origin-name"
@@ -200,7 +205,11 @@ const EditMovie = () => {
                             <label htmlFor="poster-img">
                                 <img
                                     id="poster-preview"
-                                    src={posterPreview ? `${posterPreview}` : "/img-placeholder.jpg"}
+                                    src={
+                                        posterPreview
+                                            ? `${posterPreview}`
+                                            : "/img-placeholder.jpg"
+                                    }
                                     alt=""
                                     className="mt-1 h-32 w-32 cursor-pointer rounded-xl object-cover"
                                 />
@@ -224,7 +233,11 @@ const EditMovie = () => {
                             <label htmlFor="thumb-img">
                                 <img
                                     id="thumb-preview"
-                                    src={thumbPreview ? `${thumbPreview}` : "/img-placeholder.jpg"}
+                                    src={
+                                        thumbPreview
+                                            ? `${thumbPreview}`
+                                            : "/img-placeholder.jpg"
+                                    }
                                     alt=""
                                     className="mt-1 h-32 w-32 cursor-pointer rounded-xl object-cover"
                                 />

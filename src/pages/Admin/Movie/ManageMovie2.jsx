@@ -21,6 +21,7 @@ import SideBar from "@components/SideBar";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
+import { API_URL } from "@libs/config";
 
 // Create context for modal actions
 const MovieModalContext = createContext({});
@@ -39,7 +40,7 @@ const ImageUpload = ({ value, onChange, currentImage, folder = "movies" }) => {
         setLoading(true);
         try {
             const response = await axios.post(
-                `http://localhost:8080/api/upload/${folder}`,
+                `${API_URL}/api/upload/${folder}`,
                 formData,
                 {
                     headers: {
@@ -75,7 +76,7 @@ const ImageUpload = ({ value, onChange, currentImage, folder = "movies" }) => {
             >
                 {displayUrl ? (
                     <img
-                        src={`http://localhost:8080/images/${folder}/${displayUrl}`}
+                        src={`${API_URL}/images/${folder}/${displayUrl}`}
                         alt="preview"
                         style={{
                             width: "100%",
@@ -113,7 +114,7 @@ const ActionColumn = ({ record }) => {
 
     const handleDelete = async (id, name) => {
         try {
-            await axios.delete(`http://localhost:8080/api/movies/${id}`, {
+            await axios.delete(`${API_URL}/api/movies/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -183,7 +184,7 @@ const ManageMovie2 = () => {
                 <img
                     src={
                         url
-                            ? `http://localhost:8080/images/movies/${url}`
+                            ? `${API_URL}/images/movies/${url}`
                             : "/img-placeholder.jpg"
                     }
                     alt="Poster"
@@ -266,7 +267,7 @@ const ManageMovie2 = () => {
                         </div>
                         <div className="overflow-x-auto rounded-lg bg-white p-2 shadow sm:p-3 md:p-4">
                             <DataTableWrapper
-                                url="http://localhost:8080/api/movies"
+                                url={`${API_URL}/api/movies`}
                                 columns={columns}
                                 toolbars={toolbars}
                                 rowKey="_id"
@@ -281,8 +282,8 @@ const ManageMovie2 = () => {
                                     formType={editingMovie ? "edit" : "create"}
                                     resource={
                                         editingMovie
-                                            ? `http://localhost:8080/api/movies/${editingMovie._id}`
-                                            : "http://localhost:8080/api/movies"
+                                            ? `${API_URL}/api/movies/${editingMovie._id}`
+                                            : `${API_URL}/api/movies`
                                     }
                                     method={editingMovie ? "PUT" : "POST"}
                                     title={

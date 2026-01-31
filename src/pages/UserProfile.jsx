@@ -7,6 +7,7 @@ import jwt_decode from "jwt-decode";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import ChangePasswordModal from "@components/ChangePasswordModal";
+import { API_URL } from "@libs/config";
 const UserProfile = () => {
     const { handleSubmit, register, setValue } = useForm();
     const navigate = useNavigate();
@@ -29,7 +30,7 @@ const UserProfile = () => {
                     setId(decodedToken.id);
 
                     const response = await axios.get(
-                        `http://localhost:8080/api/users/find/${id}`,
+                        `${API_URL}/api/users/find/${id}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -44,8 +45,7 @@ const UserProfile = () => {
                     // Không lưu mật khẩu mã hóa từ server
                     setPassword("********");
                     setAvatarPreview(
-                        "http://localhost:8080/images/avatar/" +
-                            userData.avatar,
+                        `${API_URL}/images/avatar/` + userData.avatar,
                     );
                     setValue("username", userData.username);
                     setValue("email", userData.email);
@@ -87,7 +87,7 @@ const UserProfile = () => {
                 formData.append("avatar", data.avatar[0]); // data.avatar[0] vì file là array
             }
 
-            await axios.put("http://localhost:8080/api/users/", formData, {
+            await axios.put(`${API_URL}/api/users/`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "multipart/form-data", // Đảm bảo header phù hợp

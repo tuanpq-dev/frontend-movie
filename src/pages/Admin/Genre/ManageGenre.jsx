@@ -9,6 +9,7 @@ import SideBar from "@components/SideBar";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
+import { API_URL } from "@libs/config";
 
 // Create context for modal actions
 const GenreModalContext = createContext({});
@@ -21,7 +22,7 @@ const ActionColumn = ({ record }) => {
 
     const handleDelete = async (id, name) => {
         try {
-            await axios.delete(`http://localhost:8080/api/genres/${id}`, {
+            await axios.delete(`${API_URL}/api/genres/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -143,7 +144,7 @@ const ManageGenre = () => {
                         </div>
                         <div className="overflow-x-auto rounded-lg bg-white p-2 shadow sm:p-3 md:p-4">
                             <DataTableWrapper
-                                url="http://localhost:8080/api/genres"
+                                url={`${API_URL}/api/genres`}
                                 columns={columns}
                                 toolbars={toolbars}
                                 rowKey="_id"
@@ -159,8 +160,8 @@ const ManageGenre = () => {
                                     formType={editingGenre ? "edit" : "create"}
                                     resource={
                                         editingGenre
-                                            ? `http://localhost:8080/api/genres/${editingGenre._id}`
-                                            : "http://localhost:8080/api/genres"
+                                            ? `${API_URL}/api/genres/${editingGenre._id}`
+                                            : `${API_URL}/api/genres`
                                     }
                                     method={editingGenre ? "PUT" : "POST"}
                                     title={
