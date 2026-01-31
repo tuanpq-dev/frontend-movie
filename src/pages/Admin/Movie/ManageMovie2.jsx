@@ -10,7 +10,6 @@ import {
     InputNumber,
     Select,
     Upload,
-    Image,
     Row,
     Col,
 } from "antd";
@@ -18,7 +17,6 @@ import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useState, createContext, useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import SideBar from "@components/SideBar";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -148,6 +146,7 @@ const ActionColumn = ({ record }) => {
                     size="small"
                     icon={<FontAwesomeIcon icon={faTrash} />}
                     title="Xóa"
+                    danger
                 ></Button>
             </Popconfirm>
         </Space>
@@ -158,7 +157,6 @@ const ManageMovie2 = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [editingMovie, setEditingMovie] = useState(null);
     const [sidebarLoaded, setSidebarLoaded] = useState(false);
-    const navigate = useNavigate();
 
     const openEditModal = (movie) => {
         setEditingMovie(movie);

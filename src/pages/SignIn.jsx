@@ -126,7 +126,7 @@ const SignIn = () => {
         } catch (error) {
             const message =
                 error?.response?.status === 401
-                    ? "Sai email hoặc mật khẩu"
+                    ? "Tên đăng nhập hoặc mật khẩu chưa đúng!"
                     : "Có lỗi xảy ra, vui lòng thử lại";
 
             showErrorToast("Đăng nhập thất bại", message, 4000);
