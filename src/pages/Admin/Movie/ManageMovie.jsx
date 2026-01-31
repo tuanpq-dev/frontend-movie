@@ -82,7 +82,9 @@ const ManageMovie = () => {
                 <img
                     src={
                         url
-                            ? `${API_URL}/images/movies/${url}`
+                            ? url.startsWith("http")
+                                ? url
+                                : `${API_URL}/images/movies/${url}`
                             : "/img-placeholder.jpg"
                     }
                     alt="Poster"

@@ -101,12 +101,16 @@ const ManageMovie2 = () => {
         setEditingMovie(movie);
         setPosterPreview(
             movie.posterUrl
-                ? `${API_URL}/images/movies/${movie.posterUrl}`
+                ? movie.posterUrl.startsWith("http")
+                    ? movie.posterUrl
+                    : `${API_URL}/images/movies/${movie.posterUrl}`
                 : "/img-placeholder.jpg",
         );
         setThumbPreview(
             movie.thumbUrl
-                ? `${API_URL}/images/movies/${movie.thumbUrl}`
+                ? movie.thumbUrl.startsWith("http")
+                    ? movie.thumbUrl
+                    : `${API_URL}/images/movies/${movie.thumbUrl}`
                 : "/img-placeholder.jpg",
         );
         setPosterFile(null);
@@ -160,7 +164,9 @@ const ManageMovie2 = () => {
                 <img
                     src={
                         url
-                            ? `${API_URL}/images/movies/${url}`
+                            ? url.startsWith("http")
+                                ? url
+                                : `${API_URL}/images/movies/${url}`
                             : "/img-placeholder.jpg"
                     }
                     alt="Poster"
