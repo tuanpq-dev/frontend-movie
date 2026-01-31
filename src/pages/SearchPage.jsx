@@ -80,7 +80,9 @@ const SearchPage = () => {
                                 name={media.originName}
                                 posterUrl={
                                     media.posterUrl
-                                        ? `${API_URL}/images/movies/${media.posterUrl}`
+                                        ? media.posterUrl.startsWith("http")
+                                            ? media.posterUrl
+                                            : `${API_URL}/images/movies/${media.posterUrl}`
                                         : "/img-placeholder.jpg"
                                 }
                                 year={media.year}

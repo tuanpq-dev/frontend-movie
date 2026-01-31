@@ -29,7 +29,9 @@ const Movie = ({ movies }) => {
                     <img
                         src={
                             movie?.thumbUrl
-                                ? `${API_URL}/images/movies/${movie.thumbUrl}`
+                                ? movie.thumbUrl.startsWith("http")
+                                    ? movie.thumbUrl
+                                    : `${API_URL}/images/movies/${movie.thumbUrl}`
                                 : "/img-placeholder.jpg"
                         }
                         width={634}

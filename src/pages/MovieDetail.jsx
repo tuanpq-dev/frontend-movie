@@ -161,7 +161,9 @@ const MovieDetail = () => {
                             <img
                                 src={
                                     movieInfo.thumbUrl
-                                        ? `${API_URL}/images/movies/${movieInfo.thumbUrl}`
+                                        ? movieInfo.thumbUrl.startsWith("http")
+                                            ? movieInfo.thumbUrl
+                                            : `${API_URL}/images/movies/${movieInfo.thumbUrl}`
                                         : "/img-placeholder.jpg"
                                 }
                                 width={1280}
@@ -173,7 +175,9 @@ const MovieDetail = () => {
                             <img
                                 src={
                                     movieInfo.posterUrl
-                                        ? `${API_URL}/images/movies/${movieInfo.posterUrl}`
+                                        ? movieInfo.posterUrl.startsWith("http")
+                                            ? movieInfo.posterUrl
+                                            : `${API_URL}/images/movies/${movieInfo.posterUrl}`
                                         : "/img-placeholder.jpg"
                                 }
                                 width={200}

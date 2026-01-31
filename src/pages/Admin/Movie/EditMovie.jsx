@@ -99,12 +99,16 @@ const EditMovie = () => {
                 setContent(movieData.content);
                 setPosterPreview(
                     movieData.posterUrl
-                        ? `${API_URL}/images/movies/` + movieData.posterUrl
+                        ? movieData.posterUrl.startsWith("http")
+                            ? movieData.posterUrl
+                            : `${API_URL}/images/movies/` + movieData.posterUrl
                         : movieData.posterUrl,
                 );
                 setThumbPreview(
                     movieData.thumbUrl
-                        ? `${API_URL}/images/movies/` + movieData.thumbUrl
+                        ? movieData.thumbUrl.startsWith("http")
+                            ? movieData.thumbUrl
+                            : `${API_URL}/images/movies/` + movieData.thumbUrl
                         : movieData.thumbUrl,
                 );
                 setYear(movieData.year);

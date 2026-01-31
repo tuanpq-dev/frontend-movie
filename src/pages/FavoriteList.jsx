@@ -83,7 +83,9 @@ const FavoriteList = () => {
                                     name={movie.originName}
                                     posterUrl={
                                         movie.posterUrl
-                                            ? `${API_URL}/images/movies/${movie.posterUrl}`
+                                            ? movie.posterUrl.startsWith("http")
+                                                ? movie.posterUrl
+                                                : `${API_URL}/images/movies/${movie.posterUrl}`
                                             : "/img-placeholder.jpg"
                                     }
                                     year={movie.year}
