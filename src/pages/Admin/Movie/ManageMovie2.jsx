@@ -9,14 +9,13 @@ import {
     Input,
     InputNumber,
     Select,
-    Upload,
     Row,
     Col,
 } from "antd";
-import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
+import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
-import { useState, createContext, useContext } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
 import SideBar from "@components/SideBar";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -25,86 +24,6 @@ import { API_URL } from "@libs/config";
 
 // Create context for modal actions
 const MovieModalContext = createContext({});
-
-// Image Upload Component
-const ImageUpload = ({ value, onChange, currentImage, folder = "movies" }) => {
-    const [imageUrl, setImageUrl] = useState(value || currentImage || null);
-    const [loading, setLoading] = useState(false);
-    const token = Cookies.get("accessToken");
-
-    const handleUpload = async (options) => {
-        const { file, onSuccess, onError } = options;
-        const formData = new FormData();
-        formData.append("file", file);
-
-        setLoading(true);
-        try {
-            const response = await axios.post(
-                `${API_URL}/api/upload/${folder}`,
-                formData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "multipart/form-data",
-                    },
-                },
-            );
-            const uploadedFileName = response.data.fileName || response.data;
-            setImageUrl(uploadedFileName);
-            onChange?.(uploadedFileName);
-            onSuccess(response.data);
-            message.success("Upload thành công!");
-        } catch (error) {
-            console.error("Upload error:", error);
-            onError(error);
-            message.error("Upload thất bại!");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const displayUrl = imageUrl || value || currentImage;
-
-    return (
-        <div>
-            <Upload
-                name="file"
-                listType="picture-card"
-                showUploadList={false}
-                customRequest={handleUpload}
-                accept="image/*"
-            >
-                {displayUrl ? (
-                    <img
-                        src={`${API_URL}/images/${folder}/${displayUrl}`}
-                        alt="preview"
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                        }}
-                    />
-                ) : (
-                    <div>
-                        {loading ? (
-                            <div>Đang tải...</div>
-                        ) : (
-                            <>
-                                <UploadOutlined />
-                                <div style={{ marginTop: 8 }}>Chọn ảnh</div>
-                            </>
-                        )}
-                    </div>
-                )}
-            </Upload>
-            {displayUrl && (
-                <div style={{ marginTop: 8, fontSize: 12, color: "#888" }}>
-                    {displayUrl}
-                </div>
-            )}
-        </div>
-    );
-};
 
 // Action column component to access context
 const ActionColumn = ({ record }) => {
@@ -158,20 +77,77 @@ const ManageMovie2 = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [editingMovie, setEditingMovie] = useState(null);
     const [sidebarLoaded, setSidebarLoaded] = useState(false);
+    const [posterPreview, setPosterPreview] = useState("/img-placeholder.jpg");
+    const [thumbPreview, setThumbPreview] = useState("/img-placeholder.jpg");
+    const [posterFile, setPosterFile] = useState(null);
+    const [thumbFile, setThumbFile] = useState(null);
+    const [genresList, setGenresList] = useState([]);
+    const token = Cookies.get("accessToken");
+
+    // Fetch genres list
+    useEffect(() => {
+        const fetchGenres = async () => {
+            try {
+                const response = await axios.get(`${API_URL}/api/genres`);
+                setGenresList(response.data);
+            } catch (error) {
+                console.error("Error fetching genres:", error);
+            }
+        };
+        fetchGenres();
+    }, []);
 
     const openEditModal = (movie) => {
         setEditingMovie(movie);
+        setPosterPreview(
+            movie.posterUrl
+                ? `${API_URL}/images/movies/${movie.posterUrl}`
+                : "/img-placeholder.jpg",
+        );
+        setThumbPreview(
+            movie.thumbUrl
+                ? `${API_URL}/images/movies/${movie.thumbUrl}`
+                : "/img-placeholder.jpg",
+        );
+        setPosterFile(null);
+        setThumbFile(null);
         setModalVisible(true);
     };
 
     const openCreateModal = () => {
         setEditingMovie(null);
+        setPosterPreview("/img-placeholder.jpg");
+        setThumbPreview("/img-placeholder.jpg");
+        setPosterFile(null);
+        setThumbFile(null);
         setModalVisible(true);
     };
 
     const closeModal = () => {
         setModalVisible(false);
         setEditingMovie(null);
+        setPosterPreview("/img-placeholder.jpg");
+        setThumbPreview("/img-placeholder.jpg");
+        setPosterFile(null);
+        setThumbFile(null);
+    };
+
+    const handleChangePoster = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const previewUrl = URL.createObjectURL(file);
+            setPosterPreview(previewUrl);
+            setPosterFile(file);
+        }
+    };
+
+    const handleChangeThumb = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const previewUrl = URL.createObjectURL(file);
+            setThumbPreview(previewUrl);
+            setThumbFile(file);
+        }
     };
 
     const columns = [
@@ -294,6 +270,87 @@ const ManageMovie2 = () => {
                                     initialValues={editingMovie || {}}
                                     width="90%"
                                     style={{ maxWidth: 900 }}
+                                    customSubmit={async (
+                                        formData,
+                                        { method, resource },
+                                    ) => {
+                                        const submitData = new FormData();
+
+                                        // Append form fields
+                                        Object.keys(formData).forEach((key) => {
+                                            if (
+                                                key !== "posterUrl" &&
+                                                key !== "thumbUrl" &&
+                                                formData[key] !== undefined &&
+                                                formData[key] !== null
+                                            ) {
+                                                if (
+                                                    key === "episodes" &&
+                                                    typeof formData[key] ===
+                                                        "object"
+                                                ) {
+                                                    submitData.append(
+                                                        key,
+                                                        JSON.stringify(
+                                                            formData[key],
+                                                        ),
+                                                    );
+                                                } else if (
+                                                    key === "genres" &&
+                                                    Array.isArray(formData[key])
+                                                ) {
+                                                    submitData.append(
+                                                        key,
+                                                        formData[key]
+                                                            .map(
+                                                                (g) =>
+                                                                    g._id || g,
+                                                            )
+                                                            .join(","),
+                                                    );
+                                                } else {
+                                                    submitData.append(
+                                                        key,
+                                                        formData[key],
+                                                    );
+                                                }
+                                            }
+                                        });
+
+                                        // Append files if selected
+                                        if (posterFile) {
+                                            submitData.append(
+                                                "posterUrl",
+                                                posterFile,
+                                            );
+                                        }
+                                        if (thumbFile) {
+                                            submitData.append(
+                                                "thumbUrl",
+                                                thumbFile,
+                                            );
+                                        }
+
+                                        const headers = {
+                                            Authorization: `Bearer ${token}`,
+                                            "Content-Type":
+                                                "multipart/form-data",
+                                        };
+
+                                        if (method === "PUT") {
+                                            await axios.put(
+                                                resource,
+                                                submitData,
+                                                { headers },
+                                            );
+                                        } else {
+                                            await axios.post(
+                                                resource,
+                                                submitData,
+                                                { headers },
+                                            );
+                                        }
+                                    }}
                                 >
                                     <Row gutter={[16, 0]}>
                                         <Col xs={24} md={12}>
@@ -385,38 +442,62 @@ const ManageMovie2 = () => {
 
                                     <Row gutter={[16, 0]}>
                                         <Col xs={24} md={12}>
-                                            <Form.Item
-                                                label="Poster"
-                                                name="posterUrl"
-                                            >
-                                                <ImageUpload
-                                                    currentImage={
-                                                        editingMovie?.posterUrl
+                                            <div className="mb-4">
+                                                <label className="mb-1 block font-bold">
+                                                    Chọn ảnh Poster
+                                                </label>
+                                                <input
+                                                    type="file"
+                                                    id="poster-img-modal"
+                                                    accept="image/*"
+                                                    hidden
+                                                    onChange={
+                                                        handleChangePoster
                                                     }
-                                                    folder="movies"
                                                 />
-                                            </Form.Item>
+                                                <label
+                                                    htmlFor="poster-img-modal"
+                                                    className="cursor-pointer"
+                                                >
+                                                    <img
+                                                        src={posterPreview}
+                                                        alt="Poster preview"
+                                                        className="h-32 w-32 rounded-xl border border-gray-300 object-cover transition-colors hover:border-blue-500"
+                                                    />
+                                                </label>
+                                            </div>
                                         </Col>
                                         <Col xs={24} md={12}>
-                                            <Form.Item
-                                                label="Thumbnail"
-                                                name="thumbUrl"
-                                            >
-                                                <ImageUpload
-                                                    currentImage={
-                                                        editingMovie?.thumbUrl
-                                                    }
-                                                    folder="movies"
+                                            <div className="mb-4">
+                                                <label className="mb-1 block font-bold">
+                                                    Chọn ảnh Thumbnail
+                                                </label>
+                                                <input
+                                                    type="file"
+                                                    id="thumb-img-modal"
+                                                    accept="image/*"
+                                                    hidden
+                                                    onChange={handleChangeThumb}
                                                 />
-                                            </Form.Item>
+                                                <label
+                                                    htmlFor="thumb-img-modal"
+                                                    className="cursor-pointer"
+                                                >
+                                                    <img
+                                                        src={thumbPreview}
+                                                        alt="Thumbnail preview"
+                                                        className="h-32 w-32 rounded-xl border border-gray-300 object-cover transition-colors hover:border-blue-500"
+                                                    />
+                                                </label>
+                                            </div>
                                         </Col>
                                     </Row>
 
                                     <Form.Item
-                                        label="Trailer URL"
-                                        name="trailerUrl"
+                                        label="Trailer Key"
+                                        name="trailerKey"
                                     >
-                                        <Input placeholder="Nhập URL trailer" />
+                                        <Input placeholder="Nhập trailer key (VD: xG2zhTMEQCo)" />
                                     </Form.Item>
 
                                     <Row gutter={[16, 0]}>
@@ -435,46 +516,202 @@ const ManageMovie2 = () => {
                                                 </Select>
                                             </Form.Item>
                                         </Col>
-                                        <Col xs={24} sm={12} md={8}>
+                                        <Col xs={24} sm={12} md={16}>
                                             <Form.Item
-                                                label="Trạng thái"
-                                                name="status"
+                                                label="Thể loại"
+                                                name="genres"
+                                                getValueFromEvent={(value) =>
+                                                    value
+                                                }
+                                                getValueProps={(value) => ({
+                                                    value:
+                                                        value?.map(
+                                                            (g) => g._id || g,
+                                                        ) || [],
+                                                })}
                                             >
-                                                <Select placeholder="Chọn trạng thái">
-                                                    <Select.Option value="ongoing">
-                                                        Đang chiếu
-                                                    </Select.Option>
-                                                    <Select.Option value="completed">
-                                                        Hoàn thành
-                                                    </Select.Option>
-                                                    <Select.Option value="trailer">
-                                                        Sắp chiếu
-                                                    </Select.Option>
-                                                </Select>
-                                            </Form.Item>
-                                        </Col>
-                                        <Col xs={24} sm={12} md={8}>
-                                            <Form.Item
-                                                label="Chất lượng"
-                                                name="quality"
-                                            >
-                                                <Select placeholder="Chọn chất lượng">
-                                                    <Select.Option value="HD">
-                                                        HD
-                                                    </Select.Option>
-                                                    <Select.Option value="FHD">
-                                                        Full HD
-                                                    </Select.Option>
-                                                    <Select.Option value="4K">
-                                                        4K
-                                                    </Select.Option>
-                                                    <Select.Option value="CAM">
-                                                        CAM
-                                                    </Select.Option>
+                                                <Select
+                                                    mode="multiple"
+                                                    placeholder="Chọn thể loại phim"
+                                                    optionFilterProp="children"
+                                                    style={{ width: "100%" }}
+                                                >
+                                                    {genresList.map((genre) => (
+                                                        <Select.Option
+                                                            key={genre._id}
+                                                            value={genre._id}
+                                                        >
+                                                            {genre.nameGenre}
+                                                        </Select.Option>
+                                                    ))}
                                                 </Select>
                                             </Form.Item>
                                         </Col>
                                     </Row>
+
+                                    {/* Episodes Section - depends on movie type */}
+                                    <Form.Item
+                                        noStyle
+                                        shouldUpdate={(
+                                            prevValues,
+                                            currentValues,
+                                        ) =>
+                                            prevValues.type !==
+                                            currentValues.type
+                                        }
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const movieType =
+                                                getFieldValue("type");
+
+                                            if (movieType === "single") {
+                                                // Phim lẻ: chỉ 1 video
+                                                return (
+                                                    <div className="mt-4 rounded-lg border border-gray-200 p-4">
+                                                        <h3 className="mb-4 text-lg font-bold">
+                                                            Video phim
+                                                        </h3>
+                                                        <Form.Item
+                                                            label="URL Video"
+                                                            name={[
+                                                                "episodes",
+                                                                0,
+                                                                "video",
+                                                            ]}
+                                                        >
+                                                            <Input placeholder="Nhập URL video phim" />
+                                                        </Form.Item>
+                                                        <Form.Item
+                                                            hidden
+                                                            name={[
+                                                                "episodes",
+                                                                0,
+                                                                "name",
+                                                            ]}
+                                                            initialValue="Full"
+                                                        >
+                                                            <Input />
+                                                        </Form.Item>
+                                                    </div>
+                                                );
+                                            }
+
+                                            // Phim bộ: nhiều tập
+                                            return (
+                                                <div className="mt-4 rounded-lg border border-gray-200 p-4">
+                                                    <h3 className="mb-4 text-lg font-bold">
+                                                        Danh sách tập phim
+                                                    </h3>
+                                                    <Form.List name="episodes">
+                                                        {(
+                                                            fields,
+                                                            { add, remove },
+                                                        ) => (
+                                                            <>
+                                                                {fields.map(
+                                                                    ({
+                                                                        key,
+                                                                        name,
+                                                                        ...restField
+                                                                    }) => (
+                                                                        <div
+                                                                            key={
+                                                                                key
+                                                                            }
+                                                                            className="mb-4 rounded-lg border border-gray-100 bg-gray-50 p-4"
+                                                                        >
+                                                                            <Row
+                                                                                gutter={[
+                                                                                    16,
+                                                                                    0,
+                                                                                ]}
+                                                                                align="middle"
+                                                                            >
+                                                                                <Col
+                                                                                    xs={
+                                                                                        24
+                                                                                    }
+                                                                                    md={
+                                                                                        11
+                                                                                    }
+                                                                                >
+                                                                                    <Form.Item
+                                                                                        {...restField}
+                                                                                        name={[
+                                                                                            name,
+                                                                                            "name",
+                                                                                        ]}
+                                                                                        label={`Tên tập ${name + 1}`}
+                                                                                    >
+                                                                                        <Input placeholder="Nhập tên tập phim" />
+                                                                                    </Form.Item>
+                                                                                </Col>
+                                                                                <Col
+                                                                                    xs={
+                                                                                        24
+                                                                                    }
+                                                                                    md={
+                                                                                        11
+                                                                                    }
+                                                                                >
+                                                                                    <Form.Item
+                                                                                        {...restField}
+                                                                                        name={[
+                                                                                            name,
+                                                                                            "video",
+                                                                                        ]}
+                                                                                        label={`Video tập ${name + 1}`}
+                                                                                    >
+                                                                                        <Input placeholder="Nhập URL video" />
+                                                                                    </Form.Item>
+                                                                                </Col>
+                                                                                <Col
+                                                                                    xs={
+                                                                                        24
+                                                                                    }
+                                                                                    md={
+                                                                                        2
+                                                                                    }
+                                                                                    className="flex items-center justify-center"
+                                                                                >
+                                                                                    {fields.length >
+                                                                                        1 && (
+                                                                                        <MinusCircleOutlined
+                                                                                            onClick={() =>
+                                                                                                remove(
+                                                                                                    name,
+                                                                                                )
+                                                                                            }
+                                                                                            className="cursor-pointer text-xl text-red-500 hover:text-red-700"
+                                                                                        />
+                                                                                    )}
+                                                                                </Col>
+                                                                            </Row>
+                                                                        </div>
+                                                                    ),
+                                                                )}
+                                                                <Form.Item>
+                                                                    <Button
+                                                                        type="dashed"
+                                                                        onClick={() =>
+                                                                            add()
+                                                                        }
+                                                                        block
+                                                                        icon={
+                                                                            <PlusOutlined />
+                                                                        }
+                                                                    >
+                                                                        Thêm tập
+                                                                        phim
+                                                                    </Button>
+                                                                </Form.Item>
+                                                            </>
+                                                        )}
+                                                    </Form.List>
+                                                </div>
+                                            );
+                                        }}
+                                    </Form.Item>
                                 </FormRowDataTable>
                             </DataTableWrapper>
                         </div>

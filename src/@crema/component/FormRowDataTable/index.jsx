@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Modal, Form, Button, message } from "antd";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
@@ -37,6 +37,8 @@ const FormRowDataTable = ({
     readOnly = false,
     preSaveData,
     width = 600,
+    useFormData = false,
+    customSubmit,
     ...restProps
 }) => {
     const [form] = Form.useForm();
@@ -66,12 +68,25 @@ const FormRowDataTable = ({
             setLoading(true);
 
             const token = Cookies.get("accessToken");
-            const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-            if (method === "PUT") {
-                await axios.put(resource, dataToSave, { headers });
+            // Use custom submit if provided
+            if (customSubmit) {
+                await customSubmit(dataToSave, { method, resource, token });
             } else {
-                await axios.post(resource, dataToSave, { headers });
+                const headers = token
+                    ? { Authorization: `Bearer ${token}` }
+                    : {};
+
+                // Handle FormData for file uploads
+                if (useFormData && dataToSave instanceof FormData) {
+                    headers["Content-Type"] = "multipart/form-data";
+                }
+
+                if (method === "PUT") {
+                    await axios.put(resource, dataToSave, { headers });
+                } else {
+                    await axios.post(resource, dataToSave, { headers });
+                }
             }
 
             message.success(config.successMessage);
@@ -159,6 +174,8 @@ FormRowDataTable.propTypes = {
     readOnly: PropTypes.bool,
     preSaveData: PropTypes.func,
     width: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    useFormData: PropTypes.bool,
+    customSubmit: PropTypes.func,
 };
 
 export default FormRowDataTable;
