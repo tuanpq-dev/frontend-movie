@@ -5,6 +5,8 @@ import {
     faRightFromBracket,
     faTableList,
     faUser,
+    faCreditCard,
+    faChartLine,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
@@ -79,6 +81,16 @@ const SideBar = ({ onLoadComplete }) => {
         { path: "/admin/movie", icon: faFilm, label: "Quản lý phim" },
         { path: "/admin/genre", icon: faTableList, label: "Quản lý thể loại" },
         { path: "/admin/user", icon: faUser, label: "Quản lý tài khoản" },
+        {
+            path: "/admin/payment",
+            icon: faCreditCard,
+            label: "Quản lý thanh toán",
+        },
+        {
+            path: "/admin/revenue",
+            icon: faChartLine,
+            label: "Thống kê doanh thu",
+        },
     ];
 
     return (

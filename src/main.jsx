@@ -23,6 +23,8 @@ import EditUser from "@pages/Admin/User/EditUser";
 import ManageGenre from "@pages/Admin/Genre/ManageGenre";
 import CreateGenre from "@pages/Admin/Genre/CreateGenre";
 import EditGenre from "@pages/Admin/Genre/EditGenre";
+import ManagePayment from "@pages/Admin/Payment/ManagePayment";
+import ManageRevenue from "@pages/Admin/Payment/ManageRevenue";
 import FavoriteList from "@pages/FavoriteList";
 import AdminRouter from "./AdminRouter";
 import VnPayReturn from "@pages/VNPayReturn";
@@ -108,6 +110,14 @@ const router = createBrowserRouter([
     {
         path: "/admin/genre/edit/:id",
         element: <AdminRouter element={<EditGenre />} />,
+    },
+    {
+        path: "/admin/payment",
+        element: <AdminRouter element={<ManagePayment />} />,
+    },
+    {
+        path: "/admin/revenue",
+        element: <AdminRouter element={<ManageRevenue />} />,
     },
     {
         path: "/VnPayReturn",
