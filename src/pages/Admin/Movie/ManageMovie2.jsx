@@ -1,26 +1,16 @@
 import DataTableWrapper from "src/@crema/core/DataTable/index";
 import FormRowDataTable from "src/@crema/component/FormRowDataTable/index";
-import {
-    Button,
-    Space,
-    Popconfirm,
-    message,
-    Form,
-    Input,
-    InputNumber,
-    Select,
-    Row,
-    Col,
-} from "antd";
-import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
+import { Button, Space, Popconfirm, message } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faTrash, faEye } from "@fortawesome/free-solid-svg-icons";
 import { useState, createContext, useContext, useEffect } from "react";
 import SideBar from "@components/SideBar";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
 import { API_URL } from "@libs/config";
+import MovieForm from "./components/MovieForm";
 
 // Create context for modal actions
 const MovieModalContext = createContext({});
@@ -29,7 +19,7 @@ const MovieModalContext = createContext({});
 const ActionColumn = ({ record }) => {
     const token = Cookies.get("accessToken");
     const { reloadPage } = useDataTableContext();
-    const { openEditModal } = useContext(MovieModalContext);
+    const { openEditModal, openViewModal } = useContext(MovieModalContext);
 
     const handleDelete = async (id, name) => {
         try {
@@ -48,6 +38,12 @@ const ActionColumn = ({ record }) => {
 
     return (
         <Space size="small" wrap>
+            <Button
+                size="small"
+                icon={<FontAwesomeIcon icon={faEye} />}
+                onClick={() => openViewModal(record)}
+                title="Xem chi tiết"
+            ></Button>
             <Button
                 size="small"
                 icon={<FontAwesomeIcon icon={faEdit} />}
@@ -75,8 +71,11 @@ const ActionColumn = ({ record }) => {
 
 const ManageMovie2 = () => {
     const [modalVisible, setModalVisible] = useState(false);
+    const [viewModalVisible, setViewModalVisible] = useState(false);
     const [editingMovie, setEditingMovie] = useState(null);
+    const [viewingMovie, setViewingMovie] = useState(null);
     const [sidebarLoaded, setSidebarLoaded] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [posterPreview, setPosterPreview] = useState("/img-placeholder.jpg");
     const [thumbPreview, setThumbPreview] = useState("/img-placeholder.jpg");
     const [posterFile, setPosterFile] = useState(null);
@@ -125,6 +124,16 @@ const ManageMovie2 = () => {
         setPosterFile(null);
         setThumbFile(null);
         setModalVisible(true);
+    };
+
+    const openViewModal = (movie) => {
+        setViewingMovie(movie);
+        setViewModalVisible(true);
+    };
+
+    const closeViewModal = () => {
+        setViewModalVisible(false);
+        setViewingMovie(null);
     };
 
     const closeModal = () => {
@@ -237,11 +246,18 @@ const ManageMovie2 = () => {
     ];
 
     return (
-        <MovieModalContext.Provider value={{ openEditModal }}>
+        <MovieModalContext.Provider value={{ openEditModal, openViewModal }}>
             <div className="min-h-screen bg-gray-50">
-                <SideBar onLoadComplete={() => setSidebarLoaded(true)} />
+                <SideBar
+                    onLoadComplete={() => setSidebarLoaded(true)}
+                    onCollapsedChange={setSidebarCollapsed}
+                />
                 {sidebarLoaded && (
-                    <div className="min-h-screen overflow-x-hidden p-3 pt-16 sm:p-4 md:p-6 lg:ml-64 lg:pt-6">
+                    <div
+                        className={`min-h-screen overflow-x-hidden p-3 pt-16 transition-all duration-300 sm:p-4 md:p-6 lg:pt-6 ${
+                            sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
+                        }`}
+                    >
                         <div className="mb-4 md:mb-6">
                             <h1 className="mb-2 text-xl font-bold text-gray-800 sm:text-2xl md:mb-4 md:text-3xl">
                                 Quản lý phim
@@ -358,366 +374,31 @@ const ManageMovie2 = () => {
                                         }
                                     }}
                                 >
-                                    <Row gutter={[16, 0]}>
-                                        <Col xs={24} md={12}>
-                                            <Form.Item
-                                                label="Tên phim gốc"
-                                                name="originName"
-                                                rules={[
-                                                    {
-                                                        required: true,
-                                                        message:
-                                                            "Vui lòng nhập tên phim!",
-                                                    },
-                                                ]}
-                                            >
-                                                <Input placeholder="Nhập tên phim gốc" />
-                                            </Form.Item>
-                                        </Col>
-                                        <Col xs={24} md={12}>
-                                            <Form.Item
-                                                label="Tên phim (Việt)"
-                                                name="name"
-                                            >
-                                                <Input placeholder="Nhập tên phim tiếng Việt" />
-                                            </Form.Item>
-                                        </Col>
-                                    </Row>
+                                    <MovieForm
+                                        genresList={genresList}
+                                        posterPreview={posterPreview}
+                                        thumbPreview={thumbPreview}
+                                        onChangePoster={handleChangePoster}
+                                        onChangeThumb={handleChangeThumb}
+                                    />
+                                </FormRowDataTable>
 
-                                    <Row gutter={[16, 0]}>
-                                        <Col xs={24} md={12}>
-                                            <Form.Item label="Slug" name="slug">
-                                                <Input placeholder="Nhập slug" />
-                                            </Form.Item>
-                                        </Col>
-                                        <Col xs={12} md={6}>
-                                            <Form.Item
-                                                label="Năm sản xuất"
-                                                name="year"
-                                                rules={[
-                                                    {
-                                                        required: true,
-                                                        message:
-                                                            "Vui lòng nhập năm!",
-                                                    },
-                                                ]}
-                                            >
-                                                <InputNumber
-                                                    placeholder="Năm"
-                                                    min={1900}
-                                                    max={2030}
-                                                    style={{ width: "100%" }}
-                                                />
-                                            </Form.Item>
-                                        </Col>
-                                        <Col xs={12} md={6}>
-                                            <Form.Item
-                                                label="Thời lượng"
-                                                name="time"
-                                            >
-                                                <Input placeholder="VD: 120 phút" />
-                                            </Form.Item>
-                                        </Col>
-                                    </Row>
-
-                                    <Row gutter={[16, 0]}>
-                                        <Col xs={24} md={12}>
-                                            <Form.Item
-                                                label="Đạo diễn"
-                                                name="director"
-                                            >
-                                                <Input placeholder="Nhập tên đạo diễn" />
-                                            </Form.Item>
-                                        </Col>
-                                        <Col xs={24} md={12}>
-                                            <Form.Item
-                                                label="Diễn viên"
-                                                name="actor"
-                                            >
-                                                <Input placeholder="Nhập danh sách diễn viên" />
-                                            </Form.Item>
-                                        </Col>
-                                    </Row>
-
-                                    <Form.Item label="Nội dung" name="content">
-                                        <Input.TextArea
-                                            placeholder="Nhập nội dung phim"
-                                            rows={4}
-                                        />
-                                    </Form.Item>
-
-                                    <Row gutter={[16, 0]}>
-                                        <Col xs={24} md={12}>
-                                            <div className="mb-4">
-                                                <label className="mb-1 block font-bold">
-                                                    Chọn ảnh Poster
-                                                </label>
-                                                <input
-                                                    type="file"
-                                                    id="poster-img-modal"
-                                                    accept="image/*"
-                                                    hidden
-                                                    onChange={
-                                                        handleChangePoster
-                                                    }
-                                                />
-                                                <label
-                                                    htmlFor="poster-img-modal"
-                                                    className="cursor-pointer"
-                                                >
-                                                    <img
-                                                        src={posterPreview}
-                                                        alt="Poster preview"
-                                                        className="h-32 w-32 rounded-xl border border-gray-300 object-cover transition-colors hover:border-blue-500"
-                                                    />
-                                                </label>
-                                            </div>
-                                        </Col>
-                                        <Col xs={24} md={12}>
-                                            <div className="mb-4">
-                                                <label className="mb-1 block font-bold">
-                                                    Chọn ảnh Thumbnail
-                                                </label>
-                                                <input
-                                                    type="file"
-                                                    id="thumb-img-modal"
-                                                    accept="image/*"
-                                                    hidden
-                                                    onChange={handleChangeThumb}
-                                                />
-                                                <label
-                                                    htmlFor="thumb-img-modal"
-                                                    className="cursor-pointer"
-                                                >
-                                                    <img
-                                                        src={thumbPreview}
-                                                        alt="Thumbnail preview"
-                                                        className="h-32 w-32 rounded-xl border border-gray-300 object-cover transition-colors hover:border-blue-500"
-                                                    />
-                                                </label>
-                                            </div>
-                                        </Col>
-                                    </Row>
-
-                                    <Form.Item
-                                        label="Trailer Key"
-                                        name="trailerKey"
-                                    >
-                                        <Input placeholder="Nhập trailer key (VD: xG2zhTMEQCo)" />
-                                    </Form.Item>
-
-                                    <Row gutter={[16, 0]}>
-                                        <Col xs={24} sm={12} md={8}>
-                                            <Form.Item
-                                                label="Loại phim"
-                                                name="type"
-                                            >
-                                                <Select placeholder="Chọn loại phim">
-                                                    <Select.Option value="single">
-                                                        Phim lẻ
-                                                    </Select.Option>
-                                                    <Select.Option value="series">
-                                                        Phim bộ
-                                                    </Select.Option>
-                                                </Select>
-                                            </Form.Item>
-                                        </Col>
-                                        <Col xs={24} sm={12} md={16}>
-                                            <Form.Item
-                                                label="Thể loại"
-                                                name="genres"
-                                                getValueFromEvent={(value) =>
-                                                    value
-                                                }
-                                                getValueProps={(value) => ({
-                                                    value:
-                                                        value?.map(
-                                                            (g) => g._id || g,
-                                                        ) || [],
-                                                })}
-                                            >
-                                                <Select
-                                                    mode="multiple"
-                                                    placeholder="Chọn thể loại phim"
-                                                    optionFilterProp="children"
-                                                    style={{ width: "100%" }}
-                                                >
-                                                    {genresList.map((genre) => (
-                                                        <Select.Option
-                                                            key={genre._id}
-                                                            value={genre._id}
-                                                        >
-                                                            {genre.nameGenre}
-                                                        </Select.Option>
-                                                    ))}
-                                                </Select>
-                                            </Form.Item>
-                                        </Col>
-                                    </Row>
-
-                                    {/* Episodes Section - depends on movie type */}
-                                    <Form.Item
-                                        noStyle
-                                        shouldUpdate={(
-                                            prevValues,
-                                            currentValues,
-                                        ) =>
-                                            prevValues.type !==
-                                            currentValues.type
-                                        }
-                                    >
-                                        {({ getFieldValue }) => {
-                                            const movieType =
-                                                getFieldValue("type");
-
-                                            if (movieType === "single") {
-                                                // Phim lẻ: chỉ 1 video
-                                                return (
-                                                    <div className="mt-4 rounded-lg border border-gray-200 p-4">
-                                                        <h3 className="mb-4 text-lg font-bold">
-                                                            Video phim
-                                                        </h3>
-                                                        <Form.Item
-                                                            label="URL Video"
-                                                            name={[
-                                                                "episodes",
-                                                                0,
-                                                                "video",
-                                                            ]}
-                                                        >
-                                                            <Input placeholder="Nhập URL video phim" />
-                                                        </Form.Item>
-                                                        <Form.Item
-                                                            hidden
-                                                            name={[
-                                                                "episodes",
-                                                                0,
-                                                                "name",
-                                                            ]}
-                                                            initialValue="Full"
-                                                        >
-                                                            <Input />
-                                                        </Form.Item>
-                                                    </div>
-                                                );
-                                            }
-
-                                            // Phim bộ: nhiều tập
-                                            return (
-                                                <div className="mt-4 rounded-lg border border-gray-200 p-4">
-                                                    <h3 className="mb-4 text-lg font-bold">
-                                                        Danh sách tập phim
-                                                    </h3>
-                                                    <Form.List name="episodes">
-                                                        {(
-                                                            fields,
-                                                            { add, remove },
-                                                        ) => (
-                                                            <>
-                                                                {fields.map(
-                                                                    ({
-                                                                        key,
-                                                                        name,
-                                                                        ...restField
-                                                                    }) => (
-                                                                        <div
-                                                                            key={
-                                                                                key
-                                                                            }
-                                                                            className="mb-4 rounded-lg border border-gray-100 bg-gray-50 p-4"
-                                                                        >
-                                                                            <Row
-                                                                                gutter={[
-                                                                                    16,
-                                                                                    0,
-                                                                                ]}
-                                                                                align="middle"
-                                                                            >
-                                                                                <Col
-                                                                                    xs={
-                                                                                        24
-                                                                                    }
-                                                                                    md={
-                                                                                        11
-                                                                                    }
-                                                                                >
-                                                                                    <Form.Item
-                                                                                        {...restField}
-                                                                                        name={[
-                                                                                            name,
-                                                                                            "name",
-                                                                                        ]}
-                                                                                        label={`Tên tập ${name + 1}`}
-                                                                                    >
-                                                                                        <Input placeholder="Nhập tên tập phim" />
-                                                                                    </Form.Item>
-                                                                                </Col>
-                                                                                <Col
-                                                                                    xs={
-                                                                                        24
-                                                                                    }
-                                                                                    md={
-                                                                                        11
-                                                                                    }
-                                                                                >
-                                                                                    <Form.Item
-                                                                                        {...restField}
-                                                                                        name={[
-                                                                                            name,
-                                                                                            "video",
-                                                                                        ]}
-                                                                                        label={`Video tập ${name + 1}`}
-                                                                                    >
-                                                                                        <Input placeholder="Nhập URL video" />
-                                                                                    </Form.Item>
-                                                                                </Col>
-                                                                                <Col
-                                                                                    xs={
-                                                                                        24
-                                                                                    }
-                                                                                    md={
-                                                                                        2
-                                                                                    }
-                                                                                    className="flex items-center justify-center"
-                                                                                >
-                                                                                    {fields.length >
-                                                                                        1 && (
-                                                                                        <MinusCircleOutlined
-                                                                                            onClick={() =>
-                                                                                                remove(
-                                                                                                    name,
-                                                                                                )
-                                                                                            }
-                                                                                            className="cursor-pointer text-xl text-red-500 hover:text-red-700"
-                                                                                        />
-                                                                                    )}
-                                                                                </Col>
-                                                                            </Row>
-                                                                        </div>
-                                                                    ),
-                                                                )}
-                                                                <Form.Item>
-                                                                    <Button
-                                                                        type="dashed"
-                                                                        onClick={() =>
-                                                                            add()
-                                                                        }
-                                                                        block
-                                                                        icon={
-                                                                            <PlusOutlined />
-                                                                        }
-                                                                    >
-                                                                        Thêm tập
-                                                                        phim
-                                                                    </Button>
-                                                                </Form.Item>
-                                                            </>
-                                                        )}
-                                                    </Form.List>
-                                                </div>
-                                            );
-                                        }}
-                                    </Form.Item>
+                                {/* View Detail Modal */}
+                                <FormRowDataTable
+                                    visible={viewModalVisible}
+                                    onClose={closeViewModal}
+                                    formType="view"
+                                    title="Chi tiết phim"
+                                    initialValues={viewingMovie || {}}
+                                    width="90%"
+                                    style={{ maxWidth: 900 }}
+                                    readOnly={true}
+                                >
+                                    <MovieForm
+                                        readOnly={true}
+                                        genresList={genresList}
+                                        viewingMovie={viewingMovie}
+                                    />
                                 </FormRowDataTable>
                             </DataTableWrapper>
                         </div>

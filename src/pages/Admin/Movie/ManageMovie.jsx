@@ -15,6 +15,7 @@ const ManageMovie = () => {
     const [searchText, setSearchText] = useState("");
     const [loading, setLoading] = useState(false);
     const [sidebarLoaded, setSidebarLoaded] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -55,6 +56,10 @@ const ManageMovie = () => {
 
     const handleSidebarLoadComplete = () => {
         setSidebarLoaded(true);
+    };
+
+    const handleSidebarCollapsedChange = (collapsed) => {
+        setSidebarCollapsed(collapsed);
     };
 
     const filteredMovies = useMemo(() => {
@@ -168,9 +173,14 @@ const ManageMovie = () => {
 
     return (
         <div className="flex min-h-screen bg-gray-50">
-            <SideBar onLoadComplete={handleSidebarLoadComplete} />
+            <SideBar
+                onLoadComplete={handleSidebarLoadComplete}
+                onCollapsedChange={handleSidebarCollapsedChange}
+            />
             {sidebarLoaded && (
-                <div className="flex-1 p-6">
+                <div
+                    className={`flex-1 p-6 transition-all duration-300 ${sidebarCollapsed ? "lg:ml-0" : ""}`}
+                >
                     <div className="mb-6">
                         <h1 className="mb-4 text-3xl font-bold text-gray-800">
                             Quản lý phim

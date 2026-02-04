@@ -1,6 +1,6 @@
 import DataTableWrapper from "src/@crema/core/DataTable/index";
 import FormRowDataTable from "src/@crema/component/FormRowDataTable/index";
-import { Button, Space, Popconfirm, message, Form, Input } from "antd";
+import { Button, Space, Popconfirm, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -10,6 +10,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
 import { API_URL } from "@libs/config";
+import GenreForm from "./components/GenreForm";
 
 // Create context for modal actions
 const GenreModalContext = createContext({});
@@ -64,6 +65,7 @@ const ActionColumn = ({ record }) => {
 
 const ManageGenre = () => {
     const [sidebarLoaded, setSidebarLoaded] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [editingGenre, setEditingGenre] = useState(null);
 
@@ -97,12 +99,6 @@ const ManageGenre = () => {
             sorter: true,
         },
         {
-            title: "Slug",
-            dataIndex: "slug",
-            key: "slug",
-            responsive: ["md"],
-        },
-        {
             title: "Mô tả",
             dataIndex: "desc",
             key: "desc",
@@ -134,9 +130,16 @@ const ManageGenre = () => {
     return (
         <GenreModalContext.Provider value={{ openEditModal }}>
             <div className="min-h-screen bg-gray-50">
-                <SideBar onLoadComplete={() => setSidebarLoaded(true)} />
+                <SideBar
+                    onLoadComplete={() => setSidebarLoaded(true)}
+                    onCollapsedChange={setSidebarCollapsed}
+                />
                 {sidebarLoaded && (
-                    <div className="min-h-screen overflow-x-hidden p-3 pt-16 sm:p-4 md:p-6 lg:ml-64 lg:pt-6">
+                    <div
+                        className={`min-h-screen overflow-x-hidden p-3 pt-16 transition-all duration-300 sm:p-4 md:p-6 lg:pt-6 ${
+                            sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
+                        }`}
+                    >
                         <div className="mb-4 md:mb-6">
                             <h1 className="mb-2 text-xl font-bold text-gray-800 sm:text-2xl md:mb-4 md:text-3xl">
                                 Quản lý thể loại
@@ -173,30 +176,7 @@ const ManageGenre = () => {
                                     width="90%"
                                     style={{ maxWidth: 600 }}
                                 >
-                                    <Form.Item
-                                        label="Tên thể loại"
-                                        name="nameGenre"
-                                        rules={[
-                                            {
-                                                required: true,
-                                                message:
-                                                    "Vui lòng nhập tên thể loại!",
-                                            },
-                                        ]}
-                                    >
-                                        <Input placeholder="Nhập tên thể loại" />
-                                    </Form.Item>
-
-                                    <Form.Item label="Slug" name="slug">
-                                        <Input placeholder="Nhập slug (VD: hanh-dong)" />
-                                    </Form.Item>
-
-                                    <Form.Item label="Mô tả" name="desc">
-                                        <Input.TextArea
-                                            placeholder="Nhập mô tả thể loại"
-                                            rows={4}
-                                        />
-                                    </Form.Item>
+                                    <GenreForm />
                                 </FormRowDataTable>
                             </DataTableWrapper>
                         </div>

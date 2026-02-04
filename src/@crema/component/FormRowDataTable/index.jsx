@@ -48,12 +48,13 @@ const FormRowDataTable = ({
 
     const config = FORM_CONFIG[formType] || FORM_CONFIG.create;
 
-    // Reset form when initialValues change (when opening edit modal)
+    // Reset form when component mounts (when modal opens)
     useEffect(() => {
-        if (visible) {
-            form.setFieldsValue(initialValues);
-        }
-    }, [visible, initialValues, form]);
+        form.setFieldsValue(initialValues);
+        return () => {
+            form.resetFields();
+        };
+    }, [form, initialValues]);
 
     const handleSubmit = async () => {
         try {
@@ -120,6 +121,11 @@ const FormRowDataTable = ({
         form.resetFields();
         onClose();
     };
+
+    // Don't render anything if not visible - ensures complete unmount
+    if (!visible) {
+        return null;
+    }
 
     return (
         <Modal

@@ -51,6 +51,7 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
 const ManageRevenue = () => {
     const [sidebarLoaded, setSidebarLoaded] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [loading, setLoading] = useState(true);
     const [dateRange, setDateRange] = useState([
         dayjs().startOf("month"),
@@ -267,9 +268,16 @@ const ManageRevenue = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <SideBar onLoadComplete={() => setSidebarLoaded(true)} />
+            <SideBar
+                onLoadComplete={() => setSidebarLoaded(true)}
+                onCollapsedChange={setSidebarCollapsed}
+            />
             {sidebarLoaded && (
-                <div className="min-h-screen overflow-x-hidden p-3 pt-16 sm:p-4 md:p-6 lg:ml-64 lg:pt-6">
+                <div
+                    className={`min-h-screen overflow-x-hidden p-3 pt-16 transition-all duration-300 sm:p-4 md:p-6 lg:pt-6 ${
+                        sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
+                    }`}
+                >
                     {/* Header */}
                     <div className="mb-4 flex flex-col gap-4 md:mb-6 md:flex-row md:items-center md:justify-between">
                         <div>

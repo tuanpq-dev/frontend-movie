@@ -1,18 +1,7 @@
 import DataTableWrapper from "src/@crema/core/DataTable/index";
 import FormRowDataTable from "src/@crema/component/FormRowDataTable/index";
-import {
-    Button,
-    Space,
-    Popconfirm,
-    message,
-    Form,
-    Input,
-    Select,
-    Upload,
-    Row,
-    Col,
-} from "antd";
-import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
+import { Button, Space, Popconfirm, message } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useState, createContext, useContext } from "react";
@@ -21,84 +10,10 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
 import { API_URL } from "@libs/config";
+import UserForm from "./components/UserForm";
 
 // Create context for modal actions
 const UserModalContext = createContext({});
-
-// Image Upload Component
-const ImageUpload = ({ value, onChange, currentImage, folder = "users" }) => {
-    const [imageUrl, setImageUrl] = useState(value || currentImage || null);
-    const [loading, setLoading] = useState(false);
-    const token = Cookies.get("accessToken");
-
-    const handleUpload = async (options) => {
-        const { file, onSuccess, onError } = options;
-        const formData = new FormData();
-        formData.append("file", file);
-
-        setLoading(true);
-        try {
-            const response = await axios.post(
-                `${API_URL}/api/upload/${folder}`,
-                formData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "multipart/form-data",
-                    },
-                },
-            );
-            const uploadedFileName = response.data.fileName || response.data;
-            setImageUrl(uploadedFileName);
-            onChange?.(uploadedFileName);
-            onSuccess(response.data);
-            message.success("Upload thành công!");
-        } catch (error) {
-            console.error("Upload error:", error);
-            onError(error);
-            message.error("Upload thất bại!");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const displayUrl = imageUrl || value || currentImage;
-
-    return (
-        <div>
-            <Upload
-                name="file"
-                listType="picture-card"
-                showUploadList={false}
-                customRequest={handleUpload}
-                accept="image/*"
-            >
-                {displayUrl ? (
-                    <img
-                        src={`${API_URL}/images/${folder}/${displayUrl}`}
-                        alt="preview"
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                        }}
-                    />
-                ) : (
-                    <div>
-                        {loading ? (
-                            <div>Đang tải...</div>
-                        ) : (
-                            <>
-                                <UploadOutlined />
-                                <div style={{ marginTop: 8 }}>Chọn ảnh</div>
-                            </>
-                        )}
-                    </div>
-                )}
-            </Upload>
-        </div>
-    );
-};
 
 // Action Column Component
 const ActionColumn = ({ record }) => {
@@ -150,6 +65,7 @@ const ActionColumn = ({ record }) => {
 
 const ManageUser = () => {
     const [sidebarLoaded, setSidebarLoaded] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
 
@@ -249,9 +165,16 @@ const ManageUser = () => {
     return (
         <UserModalContext.Provider value={{ openEditModal }}>
             <div className="min-h-screen bg-gray-50">
-                <SideBar onLoadComplete={() => setSidebarLoaded(true)} />
+                <SideBar
+                    onLoadComplete={() => setSidebarLoaded(true)}
+                    onCollapsedChange={setSidebarCollapsed}
+                />
                 {sidebarLoaded && (
-                    <div className="min-h-screen overflow-x-hidden p-3 pt-16 sm:p-4 md:p-6 lg:ml-64 lg:pt-6">
+                    <div
+                        className={`min-h-screen overflow-x-hidden p-3 pt-16 transition-all duration-300 sm:p-4 md:p-6 lg:pt-6 ${
+                            sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
+                        }`}
+                    >
                         <div className="mb-4 md:mb-6">
                             <h1 className="mb-2 text-xl font-bold text-gray-800 sm:text-2xl md:mb-4 md:text-3xl">
                                 Quản lý người dùng
@@ -288,98 +211,10 @@ const ManageUser = () => {
                                     width="90%"
                                     style={{ maxWidth: 700 }}
                                 >
-                                    <Row gutter={[16, 0]}>
-                                        <Col xs={24} md={12}>
-                                            <Form.Item
-                                                label="Tên người dùng"
-                                                name="username"
-                                                rules={[
-                                                    {
-                                                        required: true,
-                                                        message:
-                                                            "Vui lòng nhập tên người dùng!",
-                                                    },
-                                                ]}
-                                            >
-                                                <Input placeholder="Nhập tên người dùng" />
-                                            </Form.Item>
-                                        </Col>
-                                        <Col xs={24} md={12}>
-                                            <Form.Item
-                                                label="Email"
-                                                name="email"
-                                                rules={[
-                                                    {
-                                                        required: true,
-                                                        message:
-                                                            "Vui lòng nhập email!",
-                                                    },
-                                                    {
-                                                        type: "email",
-                                                        message:
-                                                            "Email không hợp lệ!",
-                                                    },
-                                                ]}
-                                            >
-                                                <Input placeholder="Nhập email" />
-                                            </Form.Item>
-                                        </Col>
-                                    </Row>
-
-                                    {!editingUser && (
-                                        <Form.Item
-                                            label="Mật khẩu"
-                                            name="password"
-                                            rules={[
-                                                {
-                                                    required: true,
-                                                    message:
-                                                        "Vui lòng nhập mật khẩu!",
-                                                },
-                                                {
-                                                    min: 6,
-                                                    message:
-                                                        "Mật khẩu tối thiểu 6 ký tự!",
-                                                },
-                                            ]}
-                                        >
-                                            <Input.Password placeholder="Nhập mật khẩu" />
-                                        </Form.Item>
-                                    )}
-
-                                    <Row gutter={[16, 0]}>
-                                        <Col xs={24} md={12}>
-                                            <Form.Item
-                                                label="Avatar"
-                                                name="profilePic"
-                                            >
-                                                <ImageUpload
-                                                    currentImage={
-                                                        editingUser?.profilePic
-                                                    }
-                                                    folder="users"
-                                                />
-                                            </Form.Item>
-                                        </Col>
-                                        <Col xs={24} md={12}>
-                                            <Form.Item
-                                                label="Quyền"
-                                                name="isAdmin"
-                                                initialValue={false}
-                                            >
-                                                <Select placeholder="Chọn quyền">
-                                                    <Select.Option
-                                                        value={false}
-                                                    >
-                                                        Người dùng
-                                                    </Select.Option>
-                                                    <Select.Option value={true}>
-                                                        Quản trị viên
-                                                    </Select.Option>
-                                                </Select>
-                                            </Form.Item>
-                                        </Col>
-                                    </Row>
+                                    <UserForm
+                                        isEditing={!!editingUser}
+                                        editingUser={editingUser}
+                                    />
                                 </FormRowDataTable>
                             </DataTableWrapper>
                         </div>

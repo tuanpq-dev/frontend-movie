@@ -134,6 +134,7 @@ const ActionColumn = ({ record }) => {
 
 // Payment Detail Modal Component
 const PaymentDetailModal = ({ visible, payment, onClose }) => {
+    console.log({ payment });
     if (!visible || !payment) return null;
 
     return (
@@ -147,18 +148,16 @@ const PaymentDetailModal = ({ visible, payment, onClose }) => {
                     Chi tiết thanh toán
                 </h2>
                 <div className="space-y-3">
-                    <div className="flex justify-between border-b pb-2">
+                    {/* <div className="flex justify-between border-b pb-2">
                         <span className="text-gray-600">Mã giao dịch:</span>
                         <span className="font-medium">
                             {payment.transactionId || payment._id}
                         </span>
-                    </div>
+                    </div> */}
                     <div className="flex justify-between border-b pb-2">
                         <span className="text-gray-600">Người dùng:</span>
                         <span className="font-medium">
-                            {payment.userId?.userName ||
-                                payment.userId?._id ||
-                                "N/A"}
+                            {payment.userId?.username}
                         </span>
                     </div>
                     <div className="flex justify-between border-b pb-2">
@@ -184,7 +183,7 @@ const PaymentDetailModal = ({ visible, payment, onClose }) => {
                     </div>
                     <div className="flex justify-between border-b pb-2">
                         <span className="text-gray-600">Phương thức:</span>
-                        <PaymentMethodTag method={payment.paymentMethod} />
+                        <PaymentMethodTag method="vnpay" />
                     </div>
                     <div className="flex justify-between border-b pb-2">
                         <span className="text-gray-600">Trạng thái:</span>
@@ -198,28 +197,6 @@ const PaymentDetailModal = ({ visible, payment, onClose }) => {
                             )}
                         </span>
                     </div>
-                    {payment.updatedAt && (
-                        <div className="flex justify-between border-b pb-2">
-                            <span className="text-gray-600">
-                                Cập nhật lần cuối:
-                            </span>
-                            <span className="font-medium">
-                                {dayjs(payment.updatedAt).format(
-                                    "DD/MM/YYYY HH:mm:ss",
-                                )}
-                            </span>
-                        </div>
-                    )}
-                    {payment.vnpayResponseCode && (
-                        <div className="flex justify-between border-b pb-2">
-                            <span className="text-gray-600">
-                                Mã phản hồi VNPay:
-                            </span>
-                            <span className="font-medium">
-                                {payment.vnpayResponseCode}
-                            </span>
-                        </div>
-                    )}
                 </div>
                 <div className="mt-6 flex justify-end">
                     <Button onClick={onClose}>Đóng</Button>
@@ -231,6 +208,7 @@ const PaymentDetailModal = ({ visible, payment, onClose }) => {
 
 const ManagePayment = () => {
     const [sidebarLoaded, setSidebarLoaded] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [detailModalVisible, setDetailModalVisible] = useState(false);
     const [selectedPayment, setSelectedPayment] = useState(null);
     const [dateRange, setDateRange] = useState(null);
@@ -301,14 +279,12 @@ const ManagePayment = () => {
         },
         {
             title: "Người dùng",
-            dataIndex: ["userId", "userName"],
+            dataIndex: "userId",
             key: "username",
             width: 150,
-            render: (text, record) =>
-                text ||
-                record.userId?.userName ||
-                record.userId?._id?.slice(-8) ||
-                "N/A",
+            render: (record) => {
+                return record?.username || "Chưa có tên";
+            },
         },
         {
             title: "Email",
@@ -335,7 +311,7 @@ const ManagePayment = () => {
             key: "paymentMethod",
             width: 120,
             responsive: ["md"],
-            render: (method) => <PaymentMethodTag method={method} />,
+            render: () => <PaymentMethodTag method="vnpay" />,
         },
         {
             title: "Trạng thái",
@@ -407,9 +383,16 @@ const ManagePayment = () => {
     return (
         <PaymentModalContext.Provider value={{ openDetailModal }}>
             <div className="min-h-screen bg-gray-50">
-                <SideBar onLoadComplete={() => setSidebarLoaded(true)} />
+                <SideBar
+                    onLoadComplete={() => setSidebarLoaded(true)}
+                    onCollapsedChange={setSidebarCollapsed}
+                />
                 {sidebarLoaded && (
-                    <div className="min-h-screen overflow-x-hidden p-3 pt-16 sm:p-4 md:p-6 lg:ml-64 lg:pt-6">
+                    <div
+                        className={`min-h-screen overflow-x-hidden p-3 pt-16 transition-all duration-300 sm:p-4 md:p-6 lg:pt-6 ${
+                            sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
+                        }`}
+                    >
                         <div className="mb-4 md:mb-6">
                             <h1 className="mb-2 text-xl font-bold text-gray-800 sm:text-2xl md:mb-4 md:text-3xl">
                                 Quản lý thanh toán

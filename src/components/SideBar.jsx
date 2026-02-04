@@ -16,7 +16,7 @@ import jwt_decode from "jwt-decode";
 import axios from "axios";
 import { API_URL } from "@libs/config";
 
-const SideBar = ({ onLoadComplete }) => {
+const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
     const [userData, setUserData] = useState(null);
     const [collapsed, setCollapsed] = useState(false);
     const token = Cookies.get("accessToken");
@@ -27,6 +27,12 @@ const SideBar = ({ onLoadComplete }) => {
     const handleLogout = () => {
         Cookies.remove("accessToken");
         window.location.href = "/";
+    };
+
+    const toggleCollapsed = () => {
+        const newCollapsed = !collapsed;
+        setCollapsed(newCollapsed);
+        onCollapsedChange?.(newCollapsed);
     };
 
     const handleNavigate = (path) => {
@@ -97,7 +103,7 @@ const SideBar = ({ onLoadComplete }) => {
         <>
             {/* Mobile toggle button */}
             <button
-                onClick={() => setCollapsed(!collapsed)}
+                onClick={toggleCollapsed}
                 className="fixed left-4 top-4 z-50 rounded-lg bg-white p-2 text-gray-700 shadow-lg transition-colors hover:bg-gray-100 lg:hidden"
             >
                 <FontAwesomeIcon icon={faBars} className="h-5 w-5" />
@@ -107,7 +113,10 @@ const SideBar = ({ onLoadComplete }) => {
             {!collapsed && (
                 <div
                     className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-                    onClick={() => setCollapsed(true)}
+                    onClick={() => {
+                        setCollapsed(true);
+                        onCollapsedChange?.(true);
+                    }}
                 />
             )}
 
@@ -138,7 +147,7 @@ const SideBar = ({ onLoadComplete }) => {
                         </button>
                     )}
                     <button
-                        onClick={() => setCollapsed(!collapsed)}
+                        onClick={toggleCollapsed}
                         className="hidden rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 lg:block"
                     >
                         <FontAwesomeIcon

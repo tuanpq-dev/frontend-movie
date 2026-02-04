@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { IntlProvider } from "react-intl";
 import Root from "./pages/Root.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import MovieDetail from "@pages/MovieDetail";
@@ -127,9 +128,11 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
     <StrictMode>
-        <ModalProvider>
-            <Toast />
-            <RouterProvider router={router} />
-        </ModalProvider>
+        <IntlProvider locale="vi" messages={{}}>
+            <ModalProvider>
+                <Toast />
+                <RouterProvider router={router} />
+            </ModalProvider>
+        </IntlProvider>
     </StrictMode>,
 );
