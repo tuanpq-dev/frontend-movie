@@ -23,10 +23,11 @@ const Root = () => {
                 if (token) {
                     setIsLoggedIn(true);
                     const decodedToken = jwt_decode(token); // Giải mã accessToken
-                    setId(decodedToken.id);
+                    const userId = decodedToken.id;
+                    setId(userId);
 
                     const response = await axios.get(
-                        `${API_URL}/api/users/find/${id}`,
+                        `${API_URL}/api/users/${userId}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -39,7 +40,6 @@ const Root = () => {
                     setUserName(userData.username);
                     setEmail(userData.email);
                     setAvatar(userData.avatar);
-                    console.log(userName, email, avatar);
                 } else {
                     setIsLoggedIn(false);
                 }

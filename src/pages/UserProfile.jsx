@@ -27,10 +27,11 @@ const UserProfile = () => {
                 if (token) {
                     setIsLoggedIn(true);
                     const decodedToken = jwt_decode(token); // Giải mã accessToken
-                    setId(decodedToken.id);
+                    const userId = decodedToken.id;
+                    setId(userId);
 
                     const response = await axios.get(
-                        `${API_URL}/api/users/find/${id}`,
+                        `${API_URL}/api/users/${userId}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -50,8 +51,6 @@ const UserProfile = () => {
                     setValue("username", userData.username);
                     setValue("email", userData.email);
                     setValue("_id", decodedToken.id);
-                    // eslint-disable-next-line no-undef
-                    setValue("password", confirmPassword);
                 } else {
                     setIsLoggedIn(false);
                 }

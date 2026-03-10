@@ -3,9 +3,9 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { API_URL } from "@libs/config";
 
-const TVSeries = () => {
+const CartoonMovie = () => {
     const [movies, setMovies] = useState([]);
-    const [filteredMovieSeries, setFilteredMovieSeries] = useState([]);
+    const [filteredMovieCartoons, setFilteredMovieCartoons] = useState([]);
     useEffect(() => {
         const fetchMovies = async () => {
             try {
@@ -20,13 +20,15 @@ const TVSeries = () => {
         fetchMovies(); // Gọi hàm để lấy dữ liệu khi component mount
     }, []);
     useEffect(() => {
-        const fillterSeries = movies.filter((movie) => movie.type === "series");
-        setFilteredMovieSeries(fillterSeries);
+        const filterCartoons = movies.filter((movie) =>
+            movie.genres.some((gen) => gen?.nameGenre === "Hoạt hình"),
+        );
+        setFilteredMovieCartoons(filterCartoons);
     }, [movies]);
     return (
         <div className="min-h-screen bg-[#292e39]">
-            <MediaList movies={filteredMovieSeries} title={`Phim bộ`} />
+            <MediaList movies={filteredMovieCartoons} title={`Hoạt hình`} />
         </div>
     );
 };
-export default TVSeries;
+export default CartoonMovie;

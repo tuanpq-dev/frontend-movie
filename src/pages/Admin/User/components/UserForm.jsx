@@ -155,10 +155,10 @@ const UserForm = ({
 
             <Row gutter={[16, 0]}>
                 <Col xs={24} md={12}>
-                    <Form.Item label="Avatar" name="profilePic">
+                    <Form.Item label="Avatar" name="avatar">
                         <ImageUpload
-                            currentImage={editingUser?.profilePic}
-                            folder="users"
+                            currentImage={editingUser?.avatar}
+                            folder="avatar"
                             disabled={readOnly}
                         />
                     </Form.Item>

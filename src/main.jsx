@@ -30,6 +30,7 @@ import FavoriteList from "@pages/FavoriteList";
 import AdminRouter from "./AdminRouter";
 import VnPayReturn from "@pages/VNPayReturn";
 import ManageMovie2 from "@pages/Admin/Movie/ManageMovie2";
+import CartoonMovie from "@pages/CartoonMovie";
 const router = createBrowserRouter([
     {
         element: <Root />,
@@ -53,6 +54,10 @@ const router = createBrowserRouter([
             {
                 path: "/tv",
                 element: <TVSeries />,
+            },
+            {
+                path: "/cartoon",
+                element: <CartoonMovie />,
             },
             {
                 path: "/search",

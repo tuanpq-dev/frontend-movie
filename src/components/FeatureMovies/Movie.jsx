@@ -26,18 +26,20 @@ const Movie = ({ movies }) => {
         >
             {movies.map((movie) => (
                 <div key={movie._id} className="h-full w-full">
-                    <img
-                        src={
-                            movie?.thumbUrl
-                                ? movie.thumbUrl.startsWith("http")
-                                    ? movie.thumbUrl
-                                    : `${API_URL}/images/movies/${movie.thumbUrl}`
-                                : "/img-placeholder.jpg"
-                        }
-                        width={634}
-                        height={357}
-                        className="h-full w-full object-cover brightness-50"
-                    />
+                    <div className="aspect-video w-full overflow-hidden">
+                        <img
+                            src={
+                                movie?.thumbUrl
+                                    ? movie.thumbUrl.startsWith("http")
+                                        ? movie.thumbUrl
+                                        : `${API_URL}/images/movies/${movie.thumbUrl}`
+                                    : "/img-placeholder.jpg"
+                            }
+                            className="h-full w-full object-cover brightness-50"
+                            alt="movie thumbnail"
+                        />
+                    </div>
+
                     <div className="absolute bottom-[15%] left-8">
                         <div>
                             <h3 className="mb-1 text-xl font-bold">

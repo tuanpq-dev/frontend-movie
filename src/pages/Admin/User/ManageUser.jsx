@@ -94,14 +94,14 @@ const ManageUser = () => {
         },
         {
             title: "Avatar",
-            dataIndex: "profilePic",
-            key: "profilePic",
+            dataIndex: "avatar",
+            key: "avatar",
             width: 80,
             render: (url) => (
                 <img
                     src={
                         url
-                            ? `${API_URL}/images/users/${url}`
+                            ? `${API_URL}/images/avatar/${url}`
                             : "/img-placeholder.jpg"
                     }
                     alt="Avatar"

@@ -15,7 +15,6 @@ const FeatureMovies = () => {
                 const response = await axios.get(`${API_URL}/api/movies`);
 
                 setMovies(response.data);
-                console.log(response.data);
             } catch (error) {
                 console.error("Error fetching Users:", error);
             } finally {
