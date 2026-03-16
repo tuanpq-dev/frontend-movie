@@ -9,7 +9,7 @@ import SideBar from "@components/SideBar";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
-import { API_URL } from "@libs/config";
+import { API_URL, getAvatarUrl } from "@libs/config";
 import UserForm from "./components/UserForm";
 
 // Create context for modal actions
@@ -99,11 +99,7 @@ const ManageUser = () => {
             width: 80,
             render: (url) => (
                 <img
-                    src={
-                        url
-                            ? `${API_URL}/images/avatar/${url}`
-                            : "/img-placeholder.jpg"
-                    }
+                    src={getAvatarUrl(url)}
                     alt="Avatar"
                     className="h-12 w-12 rounded-full object-cover"
                 />

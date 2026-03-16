@@ -7,7 +7,7 @@ import jwt_decode from "jwt-decode";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import ChangePasswordModal from "@components/ChangePasswordModal";
-import { API_URL } from "@libs/config";
+import { API_URL, getAvatarUrl } from "@libs/config";
 const UserProfile = () => {
     const { handleSubmit, register, setValue } = useForm();
     const navigate = useNavigate();
@@ -46,7 +46,7 @@ const UserProfile = () => {
                     // Không lưu mật khẩu mã hóa từ server
                     setPassword("********");
                     setAvatarPreview(
-                        `${API_URL}/images/avatar/` + userData.avatar,
+                        getAvatarUrl(userData.avatar),
                     );
                     setValue("username", userData.username);
                     setValue("email", userData.email);

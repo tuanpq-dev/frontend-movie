@@ -5,7 +5,7 @@ import Cookies from "js-cookie";
 import jwt_decode from "jwt-decode";
 
 import axios from "axios";
-import { API_URL } from "@libs/config";
+import { API_URL, getAvatarUrl } from "@libs/config";
 
 const HeaderLogined = ({ username, email, avatar }) => {
     const [showMenuDrawer, setShowMenuDrawer] = useState(false);
@@ -133,11 +133,7 @@ const HeaderLogined = ({ username, email, avatar }) => {
             </div>
             <div className="group relative">
                 <img
-                    src={
-                        avatar
-                            ? `${API_URL}/images/avatar/` + avatar
-                            : "https://img.freepik.com/free-psd/3d-rendering-avatar_23-2150833560.jpg?w=740&t=st=1728638508~exp=1728639108~hmac=59fcbd89a8d344fb2797ab35306b6b539a477e5dd919d73e04bd449290c3a5f4"
-                    }
+                    src={getAvatarUrl(avatar)}
                     alt=""
                     className="block h-[50px] w-[50px] cursor-pointer rounded-lg object-cover"
                 />
@@ -146,11 +142,7 @@ const HeaderLogined = ({ username, email, avatar }) => {
                         <div className="absolute -top-3 right-2 inline-block border-[20px] border-b-[#2e3340] border-l-transparent border-r-transparent border-t-transparent"></div>
                         <div className="flex items-center gap-3">
                             <img
-                                src={
-                                    avatar
-                                        ? `${API_URL}/images/avatar/` + avatar
-                                        : "https://img.freepik.com/free-psd/3d-rendering-avatar_23-2150833560.jpg?w=740&t=st=1728638508~exp=1728639108~hmac=59fcbd89a8d344fb2797ab35306b6b539a477e5dd919d73e04bd449290c3a5f4"
-                                }
+                                src={getAvatarUrl(avatar)}
                                 alt=""
                                 className="h-[60px] w-[60px] rounded-xl object-cover"
                             />

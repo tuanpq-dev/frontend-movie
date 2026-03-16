@@ -7,7 +7,7 @@ import { useParams } from "react-router-dom";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { API_URL } from "@libs/config";
+import { API_URL, getAvatarUrl } from "@libs/config";
 
 const EditUser = () => {
     const navigate = useNavigate();
@@ -35,10 +35,8 @@ const EditUser = () => {
                 setUserName(userData.username);
                 setEmail(userData.email);
                 setAvatarPreview(
-                    userData.avatar
-                        ? `${API_URL}/images/avatar/` + userData.avatar
-                        : "/img-placeholder.jpg",
-                ); // Nếu có avatar từ DB
+                    getAvatarUrl(userData.avatar),
+                );// Nếu có avatar từ DB
                 setValue("username", userData.username);
                 setValue("email", userData.email);
                 setValue("isAdmin", userData.isAdmin);
