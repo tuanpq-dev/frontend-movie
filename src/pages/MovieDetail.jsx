@@ -129,6 +129,16 @@ const MovieDetail = () => {
                 { userId },
             );
             window.open(data.paymentUrl, "_blank");
+
+            // Listen for payment success from VNPay return tab
+            const onPaymentSuccess = (e) => {
+                if (e.key === "paymentSuccess") {
+                    localStorage.removeItem("paymentSuccess");
+                    window.removeEventListener("storage", onPaymentSuccess);
+                    window.location.href = `/watch/${movieInfo._id}`;
+                }
+            };
+            window.addEventListener("storage", onPaymentSuccess);
         } catch (error) {
             if (error.response?.data?.message) {
                 alert(error.response.data.message);

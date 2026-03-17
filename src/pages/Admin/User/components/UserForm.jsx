@@ -1,109 +1,41 @@
-import { Form, Input, Row, Col, Upload, message } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { Form, Input, Row, Col } from "antd";
 import PropTypes from "prop-types";
-import { useState } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
 import FormInput from "src/@crema/core/Form/FormInput";
 import FormSelect from "src/@crema/core/Form/FormSelect";
-import { API_URL } from "@libs/config";
 
-// Image Upload Component
-const ImageUpload = ({
-    value,
-    onChange,
-    currentImage,
-    folder = "users",
-    disabled = false,
-}) => {
-    const [imageUrl, setImageUrl] = useState(value || currentImage || null);
-    const [loading, setLoading] = useState(false);
-    const token = Cookies.get("accessToken");
-
-    const handleUpload = async (options) => {
-        if (disabled) return;
-
-        const { file, onSuccess, onError } = options;
-        const formData = new FormData();
-        formData.append("file", file);
-
-        setLoading(true);
-        try {
-            const response = await axios.post(
-                `${API_URL}/api/upload/${folder}`,
-                formData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "multipart/form-data",
-                    },
-                },
-            );
-            const uploadedFileName = response.data.fileName || response.data;
-            setImageUrl(uploadedFileName);
-            onChange?.(uploadedFileName);
-            onSuccess(response.data);
-            message.success("Upload thành công!");
-        } catch (error) {
-            console.error("Upload error:", error);
-            onError(error);
-            message.error("Upload thất bại!");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const displayUrl = imageUrl || value || currentImage;
-
-    return (
-        <div>
-            <Upload
-                name="file"
-                listType="picture-card"
-                showUploadList={false}
-                customRequest={handleUpload}
-                accept="image/*"
-                disabled={disabled}
-            >
-                {displayUrl ? (
-                    <img
-                        src={`${API_URL}/images/${folder}/${displayUrl}`}
-                        alt="preview"
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                        }}
-                    />
-                ) : (
-                    <div>
-                        {loading ? (
-                            <div>Đang tải...</div>
-                        ) : (
-                            <>
-                                <UploadOutlined />
-                                <div style={{ marginTop: 8 }}>Chọn ảnh</div>
-                            </>
-                        )}
-                    </div>
-                )}
-            </Upload>
-        </div>
-    );
-};
+// Simple Image Upload with preview
+const ImageUpload = ({ label, id, preview, onChange }) => (
+    <div className="mb-4">
+        <label className="mb-1 block font-bold">{label}</label>
+        <input
+            type="file"
+            id={id}
+            accept="image/*"
+            hidden
+            onChange={onChange}
+        />
+        <label htmlFor={id} className="cursor-pointer">
+            <img
+                src={preview}
+                alt={`${label} preview`}
+                className="h-32 w-32 rounded-full border border-gray-300 object-cover transition-colors hover:border-blue-500"
+            />
+        </label>
+    </div>
+);
 
 ImageUpload.propTypes = {
-    value: PropTypes.string,
-    onChange: PropTypes.func,
-    currentImage: PropTypes.string,
-    folder: PropTypes.string,
-    disabled: PropTypes.bool,
+    label: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired,
+    preview: PropTypes.string.isRequired,
+    onChange: PropTypes.func.isRequired,
 };
 
 const UserForm = ({
     readOnly = false,
     isEditing = false,
-    editingUser = null,
+    avatarPreview,
+    onChangeAvatar,
 }) => {
     return (
         <>
@@ -155,13 +87,14 @@ const UserForm = ({
 
             <Row gutter={[16, 0]}>
                 <Col xs={24} md={12}>
-                    <Form.Item label="Avatar" name="avatar">
+                    {!readOnly && avatarPreview && onChangeAvatar && (
                         <ImageUpload
-                            currentImage={editingUser?.avatar}
-                            folder="avatar"
-                            disabled={readOnly}
+                            label="Chọn Avatar"
+                            id="avatar-img-modal"
+                            preview={avatarPreview}
+                            onChange={onChangeAvatar}
                         />
-                    </Form.Item>
+                    )}
                 </Col>
                 <Col xs={24} md={12}>
                     <FormSelect
@@ -183,7 +116,8 @@ const UserForm = ({
 UserForm.propTypes = {
     readOnly: PropTypes.bool,
     isEditing: PropTypes.bool,
-    editingUser: PropTypes.object,
+    avatarPreview: PropTypes.string,
+    onChangeAvatar: PropTypes.func,
 };
 
 export default UserForm;

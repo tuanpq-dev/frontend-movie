@@ -9,12 +9,12 @@ import {
     faChartLine,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
-import { API_URL } from "@libs/config";
+import { API_URL, getAvatarUrl } from "@libs/config";
 
 const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
     const [userData, setUserData] = useState(null);
@@ -26,6 +26,7 @@ const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
 
     const handleLogout = () => {
         Cookies.remove("accessToken");
+        sessionStorage.removeItem("sidebarUserData");
         window.location.href = "/";
     };
 
@@ -46,12 +47,15 @@ const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
         );
     };
 
+    const onLoadCompleteRef = useRef(onLoadComplete);
+    onLoadCompleteRef.current = onLoadComplete;
+
     useEffect(() => {
         const fetchUser = async () => {
             try {
                 if (!token) {
                     setLoading(false);
-                    onLoadComplete();
+                    onLoadCompleteRef.current?.();
                     return;
                 }
 
@@ -60,8 +64,22 @@ const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
 
                 if (!userId) {
                     setLoading(false);
-                    onLoadComplete();
+                    onLoadCompleteRef.current?.();
                     return;
+                }
+
+                // Use cached data if available
+                const cached = sessionStorage.getItem("sidebarUserData");
+                if (cached) {
+                    try {
+                        const parsed = JSON.parse(cached);
+                        if (parsed._id === userId) {
+                            setUserData(parsed);
+                            setLoading(false);
+                            onLoadCompleteRef.current?.();
+                            return;
+                        }
+                    } catch {}
                 }
 
                 const response = await axios.get(
@@ -73,15 +91,19 @@ const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
                     },
                 );
                 setUserData(response.data);
+                sessionStorage.setItem(
+                    "sidebarUserData",
+                    JSON.stringify(response.data),
+                );
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu người dùng:", error);
             } finally {
                 setLoading(false);
-                onLoadComplete();
+                onLoadCompleteRef.current?.();
             }
         };
         fetchUser();
-    }, [token, onLoadComplete]);
+    }, [token]);
 
     const menuItems = [
         { path: "/admin/movie", icon: faFilm, label: "Quản lý phim" },
@@ -169,11 +191,7 @@ const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
                         className={`flex items-center gap-3 ${collapsed ? "lg:justify-center" : ""}`}
                     >
                         <img
-                            src={
-                                userData?.profilePic
-                                    ? `${API_URL}/images/users/${userData.profilePic}`
-                                    : "https://www.speak2university.com/assets/admin/dist/img/user-avatar.png"
-                            }
+                            src={getAvatarUrl(userData?.avatar)}
                             className="h-10 w-10 rounded-full object-cover ring-2 ring-gray-200"
                             alt="Admin"
                         />

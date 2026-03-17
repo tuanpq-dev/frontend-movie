@@ -2,7 +2,6 @@ import FormField from "@components/AdminForm/FormField";
 import EpisodesInput from "@components/AdminForm/FormInput/EpisodesInput";
 import GenresInput from "@components/AdminForm/FormInput/GenresInput";
 import TypeInput from "@components/AdminForm/FormInput/TypeInput";
-import SideBar from "@components/SideBar";
 import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
@@ -139,10 +138,8 @@ const EditMovie = () => {
         fetchMovie();
     }, [id, setValue]);
     return (
-        <div className="flex bg-[#f9f9fb]">
-            <SideBar className="flex-1" />
-            <section className="flex-[4]">
-                <h1
+        <section>
+            <h1
                     className="mt-10 bg-[#f4f6f9] px-2 py-2 text-3xl"
                     id="heading-top"
                 >
@@ -428,7 +425,6 @@ const EditMovie = () => {
                     </form>
                 </div>
             </section>
-        </div>
     );
 };
 

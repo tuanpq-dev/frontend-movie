@@ -28,6 +28,7 @@ import ManagePayment from "@pages/Admin/Payment/ManagePayment";
 import ManageRevenue from "@pages/Admin/Payment/ManageRevenue";
 import FavoriteList from "@pages/FavoriteList";
 import AdminRouter from "./AdminRouter";
+import AdminLayout from "@pages/Admin/AdminLayout";
 import VnPayReturn from "@pages/VNPayReturn";
 import ManageMovie2 from "@pages/Admin/Movie/ManageMovie2";
 import CartoonMovie from "@pages/CartoonMovie";
@@ -82,48 +83,53 @@ const router = createBrowserRouter([
         element: <UserProfile />,
     },
     {
-        path: "/admin/movie",
-        element: <AdminRouter element={<ManageMovie2 />} />,
-    },
-    {
-        path: "/admin/movie/create",
-        element: <AdminRouter element={<CreateMovie />} />,
-    },
-    {
-        path: "/admin/movie/edit/:id",
-        element: <AdminRouter element={<EditMovie />} />,
+        element: <AdminRouter element={<AdminLayout />} />,
+        children: [
+            {
+                path: "/admin/movie",
+                element: <ManageMovie2 />,
+            },
+            {
+                path: "/admin/movie/create",
+                element: <CreateMovie />,
+            },
+            {
+                path: "/admin/movie/edit/:id",
+                element: <EditMovie />,
+            },
+            {
+                path: "/admin/user",
+                element: <ManageUser />,
+            },
+            {
+                path: "admin/user/edit/:id",
+                element: <EditUser />,
+            },
+            {
+                path: "/admin/genre",
+                element: <ManageGenre />,
+            },
+            {
+                path: "/admin/genre/create",
+                element: <CreateGenre />,
+            },
+            {
+                path: "/admin/genre/edit/:id",
+                element: <EditGenre />,
+            },
+            {
+                path: "/admin/payment",
+                element: <ManagePayment />,
+            },
+            {
+                path: "/admin/revenue",
+                element: <ManageRevenue />,
+            },
+        ],
     },
     {
         path: "/comment",
         element: <ManageComment />,
-    },
-    {
-        path: "/admin/user",
-        element: <AdminRouter element={<ManageUser />} />,
-    },
-    {
-        path: "admin/user/edit/:id",
-        element: <AdminRouter element={<EditUser />} />,
-    },
-    {
-        path: "/admin/genre",
-        element: <AdminRouter element={<ManageGenre />} />,
-    },
-    {
-        path: "/admin/genre/create",
-        element: <AdminRouter element={<CreateGenre />} />,
-    },
-    {
-        path: "/admin/genre/edit/:id",
-        element: <AdminRouter element={<EditGenre />} />,
-    },
-    {
-        path: "/admin/payment",
-        element: <AdminRouter element={<ManagePayment />} />,
-    },
-    {
-        path: "/admin/revenue",
-        element: <AdminRouter element={<ManageRevenue />} />,
     },
     {
         path: "/VnPayReturn",

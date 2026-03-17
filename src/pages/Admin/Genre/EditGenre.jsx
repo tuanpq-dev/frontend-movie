@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import SideBar from "@components/SideBar";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
@@ -50,10 +49,8 @@ const EditGenre = () => {
     }, [id, setValue]);
 
     return (
-        <div className="flex bg-[#f9f9fb]">
-            <SideBar className="flex-1" />
-            <section className="flex-[4]">
-                <h1
+        <section>
+            <h1
                     className="mt-10 bg-[#f4f6f9] px-2 py-2 text-3xl"
                     id="heading-top"
                 >
@@ -117,7 +114,6 @@ const EditGenre = () => {
                     </form>
                 </div>
             </section>
-        </div>
     );
 };
 export default EditGenre;

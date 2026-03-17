@@ -5,7 +5,6 @@ import { PlusOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useState, createContext, useContext } from "react";
-import SideBar from "@components/SideBar";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
@@ -64,8 +63,6 @@ const ActionColumn = ({ record }) => {
 };
 
 const ManageGenre = () => {
-    const [sidebarLoaded, setSidebarLoaded] = useState(false);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [editingGenre, setEditingGenre] = useState(null);
 
@@ -129,59 +126,45 @@ const ManageGenre = () => {
 
     return (
         <GenreModalContext.Provider value={{ openEditModal }}>
-            <div className="min-h-screen bg-gray-50">
-                <SideBar
-                    onLoadComplete={() => setSidebarLoaded(true)}
-                    onCollapsedChange={setSidebarCollapsed}
-                />
-                {sidebarLoaded && (
-                    <div
-                        className={`min-h-screen overflow-x-hidden p-3 pt-16 transition-all duration-300 sm:p-4 md:p-6 lg:pt-6 ${
-                            sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
-                        }`}
+            <div className="mb-4 md:mb-6">
+                <h1 className="mb-2 text-xl font-bold text-gray-800 sm:text-2xl md:mb-4 md:text-3xl">
+                    Quản lý thể loại
+                </h1>
+            </div>
+            <div className="overflow-x-auto rounded-lg bg-white p-2 shadow sm:p-3 md:p-4">
+                <DataTableWrapper
+                    url={`${API_URL}/api/genres`}
+                    columns={columns}
+                    toolbars={toolbars}
+                    rowKey="_id"
+                    scroll={{ x: 600 }}
+                    tableProps={{
+                        size: "small",
+                    }}
+                    showColumnIndex={false}
+                >
+                    <FormRowDataTable
+                        visible={modalVisible}
+                        onClose={closeModal}
+                        formType={editingGenre ? "edit" : "create"}
+                        resource={
+                            editingGenre
+                                ? `${API_URL}/api/genres/${editingGenre._id}`
+                                : `${API_URL}/api/genres`
+                        }
+                        method={editingGenre ? "PUT" : "POST"}
+                        title={
+                            editingGenre
+                                ? "Chỉnh sửa thể loại"
+                                : "Thêm thể loại mới"
+                        }
+                        initialValues={editingGenre || {}}
+                        width="90%"
+                        style={{ maxWidth: 600 }}
                     >
-                        <div className="mb-4 md:mb-6">
-                            <h1 className="mb-2 text-xl font-bold text-gray-800 sm:text-2xl md:mb-4 md:text-3xl">
-                                Quản lý thể loại
-                            </h1>
-                        </div>
-                        <div className="overflow-x-auto rounded-lg bg-white p-2 shadow sm:p-3 md:p-4">
-                            <DataTableWrapper
-                                url={`${API_URL}/api/genres`}
-                                columns={columns}
-                                toolbars={toolbars}
-                                rowKey="_id"
-                                scroll={{ x: 600 }}
-                                tableProps={{
-                                    size: "small",
-                                }}
-                                showColumnIndex={false}
-                            >
-                                <FormRowDataTable
-                                    visible={modalVisible}
-                                    onClose={closeModal}
-                                    formType={editingGenre ? "edit" : "create"}
-                                    resource={
-                                        editingGenre
-                                            ? `${API_URL}/api/genres/${editingGenre._id}`
-                                            : `${API_URL}/api/genres`
-                                    }
-                                    method={editingGenre ? "PUT" : "POST"}
-                                    title={
-                                        editingGenre
-                                            ? "Chỉnh sửa thể loại"
-                                            : "Thêm thể loại mới"
-                                    }
-                                    initialValues={editingGenre || {}}
-                                    width="90%"
-                                    style={{ maxWidth: 600 }}
-                                >
-                                    <GenreForm />
-                                </FormRowDataTable>
-                            </DataTableWrapper>
-                        </div>
-                    </div>
-                )}
+                        <GenreForm />
+                    </FormRowDataTable>
+                </DataTableWrapper>
             </div>
         </GenreModalContext.Provider>
     );

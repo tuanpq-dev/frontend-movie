@@ -5,7 +5,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faEye } from "@fortawesome/free-solid-svg-icons";
 import { useState, createContext, useContext, useEffect } from "react";
-import SideBar from "@components/SideBar";
+
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
@@ -14,6 +14,8 @@ import MovieForm from "./components/MovieForm";
 
 // Create context for modal actions
 const MovieModalContext = createContext({});
+
+const EMPTY_INITIAL_VALUES = {};
 
 // Action column component to access context
 const ActionColumn = ({ record }) => {
@@ -74,8 +76,6 @@ const ManageMovie2 = () => {
     const [viewModalVisible, setViewModalVisible] = useState(false);
     const [editingMovie, setEditingMovie] = useState(null);
     const [viewingMovie, setViewingMovie] = useState(null);
-    const [sidebarLoaded, setSidebarLoaded] = useState(false);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [posterPreview, setPosterPreview] = useState("/img-placeholder.jpg");
     const [thumbPreview, setThumbPreview] = useState("/img-placeholder.jpg");
     const [posterFile, setPosterFile] = useState(null);
@@ -247,24 +247,13 @@ const ManageMovie2 = () => {
 
     return (
         <MovieModalContext.Provider value={{ openEditModal, openViewModal }}>
-            <div className="min-h-screen bg-gray-50">
-                <SideBar
-                    onLoadComplete={() => setSidebarLoaded(true)}
-                    onCollapsedChange={setSidebarCollapsed}
-                />
-                {sidebarLoaded && (
-                    <div
-                        className={`min-h-screen overflow-x-hidden p-3 pt-16 transition-all duration-300 sm:p-4 md:p-6 lg:pt-6 ${
-                            sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
-                        }`}
-                    >
-                        <div className="mb-4 md:mb-6">
-                            <h1 className="mb-2 text-xl font-bold text-gray-800 sm:text-2xl md:mb-4 md:text-3xl">
-                                Quản lý phim
-                            </h1>
-                        </div>
-                        <div className="overflow-x-auto rounded-lg bg-white p-2 shadow sm:p-3 md:p-4">
-                            <DataTableWrapper
+            <div className="mb-4 md:mb-6">
+                <h1 className="mb-2 text-xl font-bold text-gray-800 sm:text-2xl md:mb-4 md:text-3xl">
+                    Quản lý phim
+                </h1>
+            </div>
+            <div className="overflow-x-auto rounded-lg bg-white p-2 shadow sm:p-3 md:p-4">
+                <DataTableWrapper
                                 url={`${API_URL}/api/movies`}
                                 columns={columns}
                                 toolbars={toolbars}
@@ -289,7 +278,9 @@ const ManageMovie2 = () => {
                                             ? "Chỉnh sửa phim"
                                             : "Thêm phim mới"
                                     }
-                                    initialValues={editingMovie || {}}
+                                    initialValues={
+                                        editingMovie || EMPTY_INITIAL_VALUES
+                                    }
                                     width="90%"
                                     style={{ maxWidth: 900 }}
                                     customSubmit={async (
@@ -389,7 +380,9 @@ const ManageMovie2 = () => {
                                     onClose={closeViewModal}
                                     formType="view"
                                     title="Chi tiết phim"
-                                    initialValues={viewingMovie || {}}
+                                    initialValues={
+                                        viewingMovie || EMPTY_INITIAL_VALUES
+                                    }
                                     width="90%"
                                     style={{ maxWidth: 900 }}
                                     readOnly={true}
@@ -399,11 +392,8 @@ const ManageMovie2 = () => {
                                         genresList={genresList}
                                         viewingMovie={viewingMovie}
                                     />
-                                </FormRowDataTable>
-                            </DataTableWrapper>
-                        </div>
-                    </div>
-                )}
+                </FormRowDataTable>
+            </DataTableWrapper>
             </div>
         </MovieModalContext.Provider>
     );

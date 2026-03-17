@@ -5,12 +5,16 @@ import { PlusOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useState, createContext, useContext } from "react";
-import SideBar from "@components/SideBar";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
 import { API_URL, getAvatarUrl } from "@libs/config";
 import UserForm from "./components/UserForm";
+
+const DEFAULT_AVATAR =
+    "https://img.freepik.com/free-psd/3d-rendering-avatar_23-2150833560.jpg?w=740&t=st=1728638508~exp=1728639108~hmac=59fcbd89a8d344fb2797ab35306b6b539a477e5dd919d73e04bd449290c3a5f4";
+
+const EMPTY_INITIAL_VALUES = {};
 
 // Create context for modal actions
 const UserModalContext = createContext({});
@@ -64,24 +68,40 @@ const ActionColumn = ({ record }) => {
 };
 
 const ManageUser = () => {
-    const [sidebarLoaded, setSidebarLoaded] = useState(false);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
+    const [avatarPreview, setAvatarPreview] = useState(DEFAULT_AVATAR);
+    const [avatarFile, setAvatarFile] = useState(null);
+    const token = Cookies.get("accessToken");
 
     const openCreateModal = () => {
         setEditingUser(null);
+        setAvatarPreview(DEFAULT_AVATAR);
+        setAvatarFile(null);
         setModalVisible(true);
     };
 
     const openEditModal = (user) => {
         setEditingUser(user);
+        setAvatarPreview(getAvatarUrl(user?.avatar));
+        setAvatarFile(null);
         setModalVisible(true);
     };
 
     const closeModal = () => {
         setModalVisible(false);
         setEditingUser(null);
+        setAvatarPreview(DEFAULT_AVATAR);
+        setAvatarFile(null);
+    };
+
+    const handleChangeAvatar = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const previewUrl = URL.createObjectURL(file);
+            setAvatarPreview(previewUrl);
+            setAvatarFile(file);
+        }
     };
 
     const columns = [
@@ -160,24 +180,13 @@ const ManageUser = () => {
 
     return (
         <UserModalContext.Provider value={{ openEditModal }}>
-            <div className="min-h-screen bg-gray-50">
-                <SideBar
-                    onLoadComplete={() => setSidebarLoaded(true)}
-                    onCollapsedChange={setSidebarCollapsed}
-                />
-                {sidebarLoaded && (
-                    <div
-                        className={`min-h-screen overflow-x-hidden p-3 pt-16 transition-all duration-300 sm:p-4 md:p-6 lg:pt-6 ${
-                            sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
-                        }`}
-                    >
-                        <div className="mb-4 md:mb-6">
-                            <h1 className="mb-2 text-xl font-bold text-gray-800 sm:text-2xl md:mb-4 md:text-3xl">
-                                Quản lý người dùng
-                            </h1>
-                        </div>
-                        <div className="overflow-x-auto rounded-lg bg-white p-2 shadow sm:p-3 md:p-4">
-                            <DataTableWrapper
+            <div className="mb-4 md:mb-6">
+                <h1 className="mb-2 text-xl font-bold text-gray-800 sm:text-2xl md:mb-4 md:text-3xl">
+                    Quản lý người dùng
+                </h1>
+            </div>
+            <div className="overflow-x-auto rounded-lg bg-white p-2 shadow sm:p-3 md:p-4">
+                <DataTableWrapper
                                 url={`${API_URL}/api/users`}
                                 columns={columns}
                                 toolbars={toolbars}
@@ -203,19 +212,63 @@ const ManageUser = () => {
                                             ? "Chỉnh sửa người dùng"
                                             : "Thêm người dùng mới"
                                     }
-                                    initialValues={editingUser || {}}
+                                    initialValues={editingUser || EMPTY_INITIAL_VALUES}
                                     width="90%"
                                     style={{ maxWidth: 700 }}
+                                    customSubmit={async (
+                                        formData,
+                                        { method, resource },
+                                    ) => {
+                                        const submitData = new FormData();
+
+                                        Object.keys(formData).forEach((key) => {
+                                            if (
+                                                key !== "avatar" &&
+                                                formData[key] !== undefined &&
+                                                formData[key] !== null
+                                            ) {
+                                                submitData.append(
+                                                    key,
+                                                    formData[key],
+                                                );
+                                            }
+                                        });
+
+                                        if (avatarFile) {
+                                            submitData.append(
+                                                "avatar",
+                                                avatarFile,
+                                            );
+                                        }
+
+                                        const headers = {
+                                            Authorization: `Bearer ${token}`,
+                                            "Content-Type":
+                                                "multipart/form-data",
+                                        };
+
+                                        if (method === "PUT") {
+                                            await axios.put(
+                                                resource,
+                                                submitData,
+                                                { headers },
+                                            );
+                                        } else {
+                                            await axios.post(
+                                                resource,
+                                                submitData,
+                                                { headers },
+                                            );
+                                        }
+                                    }}
                                 >
                                     <UserForm
                                         isEditing={!!editingUser}
-                                        editingUser={editingUser}
+                                        avatarPreview={avatarPreview}
+                                        onChangeAvatar={handleChangeAvatar}
                                     />
-                                </FormRowDataTable>
-                            </DataTableWrapper>
-                        </div>
-                    </div>
-                )}
+                </FormRowDataTable>
+            </DataTableWrapper>
             </div>
         </UserModalContext.Provider>
     );

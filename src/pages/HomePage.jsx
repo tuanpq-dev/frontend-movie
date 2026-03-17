@@ -8,6 +8,8 @@ function HomePage() {
     const [movies, setMovies] = useState([]);
     const [filteredMovieSingles, setFilteredMovieSingles] = useState([]);
     const [filteredMovieSeries, setFilteredMovieSeries] = useState([]);
+    const [filteredMovieCartoon, setFilteredMovieCartoon] = useState([]);
+
     useEffect(() => {
         const fetchMovies = async () => {
             try {
@@ -25,12 +27,20 @@ function HomePage() {
         setFilteredMovieSingles(filterSingle);
         const fillterSeries = movies.filter((movie) => movie.type === "series");
         setFilteredMovieSeries(fillterSeries);
+        const fillterCartoon = movies.filter((movie) =>
+            movie.genres.some((gen) => gen?.nameGenre === "Hoạt hình"),
+        );
+        setFilteredMovieCartoon(fillterCartoon);
     }, [JSON.stringify(movies)]);
     return (
         <div>
             <FeatureMovies />
             <MediaList movies={filteredMovieSingles} title={`Phim lẻ đề cử`} />
             <MediaList movies={filteredMovieSeries} title={`Phim bộ đề cử`} />
+            <MediaList
+                movies={filteredMovieCartoon}
+                title={`Phim hoạt hình cử`}
+            />
         </div>
     );
 }
