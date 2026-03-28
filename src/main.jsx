@@ -125,11 +125,11 @@ const router = createBrowserRouter([
                 path: "/admin/revenue",
                 element: <ManageRevenue />,
             },
+            {
+                path: "/admin/comment",
+                element: <ManageComment />,
+            },
         ],
-    },
-    {
-        path: "/comment",
-        element: <ManageComment />,
     },
     {
         path: "/VnPayReturn",

@@ -1,116 +1,257 @@
-import { useState } from "react";
-import SideBar from "@components/SideBar";
-import Modal from "@components/Modal";
-import { useParams } from "react-router-dom";
+import DataTableWrapper from "src/@crema/core/DataTable/index";
+import { Button, Modal, Popconfirm, Space, Tag, message } from "antd";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { createContext, useContext, useState } from "react";
+import axios from "axios";
+import Cookies from "js-cookie";
+import dayjs from "dayjs";
+import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
+import { API_URL } from "@libs/config";
 
-const ManageComment = () => {
-    const { id } = useParams();
-    console.log(id); // Thêm logic hiển thị comment của id phim
-    const [comments, setComments] = useState([
-        {
-            id: crypto.randomUUID(),
-            userName: "user1",
-            email: "user1@gmail.com",
-            content: "Phim hay lắm mọi người ơi",
-            createdAt: "2024-08-16T23:00:33.010+02:00",
-        },
-        {
-            id: crypto.randomUUID(),
-            userName: "user2",
-            email: "user2@gmail.com",
-            content: "Xem mãi không thấy chán",
-            createdAt: "2023-08-16T23:00:33.010+02:00",
-        },
-    ]);
-    const [showModal, setShowModal] = useState(false);
-    const [deletedCommentId, setDeletedCommentId] = useState("");
-    const [modalContent, setModalContent] = useState("");
+const CommentActionContext = createContext({});
+
+const truncate = (text = "", maxLength = 60) => {
+    if (typeof text !== "string") {
+        return "";
+    }
+    return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+};
+
+const ActionColumn = ({ record }) => {
+    const { reloadPage } = useDataTableContext() || {};
+    const token = Cookies.get("accessToken");
+    const { getCommentContent, onViewReplies } = useContext(
+        CommentActionContext,
+    );
+
+    const handleDelete = async (id, content) => {
+        try {
+            await axios.delete(`${API_URL}/api/comments/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            message.success(`Đã xóa bình luận "${truncate(content, 40)}"`);
+            reloadPage();
+        } catch (error) {
+            message.error("Lỗi khi xóa bình luận");
+            console.error("Error deleting comment:", error);
+        }
+    };
+
+    const commentId = record?._id || record?.id;
+    const commentContent = getCommentContent(record);
 
     return (
-        <div className="flex">
-            <SideBar className="flex-1" />
-            <section className="flex-[4]">
-                <h1 className="mt-10 bg-[#f4f6f9] px-2 py-2 text-3xl">
-                    Quản lý phim
-                </h1>
-                <div className="mt-3 border border-[#00000020] p-4 shadow-sm shadow-[#00000033]">
-                    <table className="w-full border-collapse overflow-x-auto text-left">
-                        <thead>
-                            <tr>
-                                <th className="border-b-2 border-b-[#dee2d6] p-3 align-bottom">
-                                    STT
-                                </th>
-                                <th className="min-w-32 border-b-2 border-b-[#dee2d6] p-3 align-bottom">
-                                    Tên người dùng
-                                </th>
-                                <th className="min-w-32 border-b-2 border-b-[#dee2d6] p-3 align-bottom">
-                                    Email
-                                </th>
-                                <th className="min-w-32 border-b-2 border-b-[#dee2d6] p-3 align-bottom">
-                                    Nội dung
-                                </th>
-                                <th className="min-w-32 border-b-2 border-b-[#dee2d6] p-3 align-bottom">
-                                    Thời gian tạo
-                                </th>
-                                <th className="min-w-32 border-b-2 border-b-[#dee2d6] p-3 align-bottom">
-                                    Chức năng
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {comments.map((comment, index) => (
-                                <tr key={comment.id}>
-                                    <td className="border-t-2 border-t-[#dee2d6] p-3 align-top">
-                                        {index + 1}
-                                    </td>
-                                    <td className="min-w-32 border-t-2 border-t-[#dee2d6] p-3 align-top">
-                                        {comment.userName}
-                                    </td>
-                                    <td className="min-w-32 border-t-2 border-t-[#dee2d6] p-3 align-top">
-                                        {comment.email}
-                                    </td>
-                                    <td className="min-w-32 border-t-2 border-t-[#dee2d6] p-3 align-top">
-                                        <p className="line-clamp-3">
-                                            {comment.content}
-                                        </p>
-                                    </td>
-                                    <td className="min-w-32 border-t-2 border-t-[#dee2d6] p-3 align-top">
-                                        {new Date(
-                                            comment.createdAt,
-                                        ).toLocaleString()}
-                                    </td>
-                                    <td className="min-w-32 border-t-2 border-t-[#dee2d6] p-3 align-top">
-                                        <a
-                                            href="#!"
-                                            className="ml-1 inline-block rounded-md bg-[#dc3545] p-2 text-white"
-                                            onClick={() => {
-                                                setShowModal(true);
-                                                setDeletedCommentId(comment.id);
-                                                setModalContent(
-                                                    ` bình luận "${comment.content}"`,
-                                                );
-                                            }}
-                                        >
-                                            Xóa
-                                        </a>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {showModal && (
-                    <Modal
-                        setShowModal={setShowModal}
-                        deletedItemId={deletedCommentId}
-                        listItem={comments}
-                        setListItem={setComments}
-                        content={modalContent}
-                    />
-                )}
-            </section>
-        </div>
+        <Space size="small" wrap>
+            <Button
+                size="small"
+                icon={<FontAwesomeIcon icon={faEye} />}
+                title="Xem phản hồi"
+                onClick={() => onViewReplies?.(record)}
+            />
+            <Popconfirm
+                title="Xóa bình luận"
+                description={`Bạn có chắc muốn xóa "${truncate(commentContent)}"?`}
+                onConfirm={() => handleDelete(commentId, commentContent)}
+                okText="Xóa"
+                cancelText="Hủy"
+                okButtonProps={{ danger: true }}
+            >
+                <Button
+                    size="small"
+                    danger
+                    icon={<FontAwesomeIcon icon={faTrash} />}
+                    title="Xóa"
+                />
+            </Popconfirm>
+        </Space>
     );
 };
+
+const ManageComment = () => {
+    const [replyModal, setReplyModal] = useState({
+        open: false,
+        comment: null,
+    });
+
+    const getCommentContent = (record) =>
+        record?.content || record?.contentReplies || "";
+
+    const onViewReplies = (comment) => {
+        setReplyModal({
+            open: true,
+            comment,
+        });
+    };
+
+    const handleCloseModal = () => {
+        setReplyModal({
+            open: false,
+            comment: null,
+        });
+    };
+
+    const replies = replyModal?.comment?.replies || [];
+    const replyTitle =
+        replyModal?.comment?.username ||
+        replyModal?.comment?.userId?.username ||
+        "Người dùng";
+    const parentContent = getCommentContent(replyModal?.comment);
+
+    const columns = [
+        {
+            title: "STT",
+            key: "index",
+            width: 60,
+            align: "center",
+            render: (_, __, index) => index + 1,
+        },
+        {
+            title: "Người dùng",
+            key: "username",
+            width: 160,
+            render: (_, record) =>
+                record?.username || record?.userId?.username || "N/A",
+        },
+        {
+            title: "Phim",
+            key: "movie",
+            width: 220,
+            ellipsis: true,
+            responsive: ["md"],
+            render: (_, record) =>
+                record?.originName ||
+                record?.movieName ||
+                record?.movieId?.originName ||
+                record?.movieId?.name ||
+                "N/A",
+        },
+        {
+            title: "Nội dung",
+            key: "content",
+            ellipsis: true,
+            render: (_, record) => (
+                <p className="line-clamp-2">{getCommentContent(record)}</p>
+            ),
+        },
+        {
+            title: "Phản hồi",
+            dataIndex: "replies",
+            key: "replies",
+            width: 110,
+            align: "center",
+            responsive: ["xl"],
+            render: (replies) => {
+                const totalReplies = Array.isArray(replies)
+                    ? replies.length
+                    : 0;
+                return totalReplies > 0 ? (
+                    <Tag color="blue">{totalReplies}</Tag>
+                ) : (
+                    <Tag>0</Tag>
+                );
+            },
+        },
+        {
+            title: "Thời gian tạo",
+            dataIndex: "createdAt",
+            key: "createdAt",
+            width: 160,
+            sorter: true,
+            responsive: ["lg"],
+            render: (date) =>
+                date ? dayjs(date).format("DD/MM/YYYY HH:mm") : "N/A",
+        },
+        {
+            title: "Hành động",
+            key: "action",
+            width: 100,
+            fixed: "right",
+            render: (_, record) => <ActionColumn record={record} />,
+        },
+    ];
+
+    return (
+        <CommentActionContext.Provider
+            value={{ getCommentContent, onViewReplies }}
+        >
+            <div className="mb-4 md:mb-6">
+                <h1 className="mb-2 text-xl font-bold text-gray-800 sm:text-2xl md:mb-4 md:text-3xl">
+                    Quản lý bình luận
+                </h1>
+            </div>
+            <div className="overflow-x-auto rounded-lg bg-white p-2 shadow sm:p-3 md:p-4">
+                <DataTableWrapper
+                    url={`${API_URL}/api/comments`}
+                    disableParams
+                    columns={columns}
+                    rowKey="_id"
+                    scroll={{ x: 1100 }}
+                    tableProps={{
+                        size: "small",
+                    }}
+                    showColumnIndex={false}
+                />
+            </div>
+            <Modal
+                open={replyModal.open}
+                title={`Phản hồi từ ${replyTitle}`}
+                onCancel={handleCloseModal}
+                footer={null}
+                width={720}
+            >
+                <div className="space-y-3">
+                    <div className="rounded bg-gray-50 p-3">
+                        <p className="text-sm text-gray-600">Bình luận gốc</p>
+                        <p className="mt-1 text-base font-medium text-gray-800">
+                            {parentContent || "N/A"}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-sm font-semibold text-gray-700">
+                            Phản hồi ({replies.length})
+                        </p>
+                        {replies.length === 0 ? (
+                            <p className="mt-2 text-gray-500">
+                                Chưa có phản hồi.
+                            </p>
+                        ) : (
+                            <div className="mt-2 space-y-3 max-h-96 overflow-y-auto pr-1">
+                                {replies.map((reply) => (
+                                    <div
+                                        key={reply?._id || reply?.id}
+                                        className="rounded border border-gray-200 p-3"
+                                    >
+                                        <div className="flex items-center justify-between text-xs text-gray-500">
+                                            <span>
+                                                {reply?.username ||
+                                                    reply?.userId?.username ||
+                                                    "Người dùng"}
+                                            </span>
+                                            <span>
+                                                {reply?.createdAt
+                                                    ? dayjs(
+                                                          reply.createdAt,
+                                                      ).format(
+                                                          "DD/MM/YYYY HH:mm",
+                                                      )
+                                                    : ""}
+                                            </span>
+                                        </div>
+                                        <p className="mt-1 text-sm text-gray-800">
+                                            {reply?.content || "N/A"}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </Modal>
+        </CommentActionContext.Provider>
+    );
+};
+
 export default ManageComment;

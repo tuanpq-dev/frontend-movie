@@ -254,15 +254,15 @@ const ManageMovie2 = () => {
             </div>
             <div className="overflow-x-auto rounded-lg bg-white p-2 shadow sm:p-3 md:p-4">
                 <DataTableWrapper
-                                url={`${API_URL}/api/movies`}
-                                columns={columns}
-                                toolbars={toolbars}
-                                rowKey="_id"
-                                scroll={{ x: 800 }}
-                                tableProps={{
-                                    size: "small",
-                                }}
-                            >
+                    url={`${API_URL}/api/movies`}
+                    columns={columns}
+                    toolbars={toolbars}
+                    rowKey="_id"
+                    scroll={{ x: 800 }}
+                    tableProps={{
+                        size: "small",
+                    }}
+                             >
                                 <FormRowDataTable
                                     visible={modalVisible}
                                     onClose={closeModal}

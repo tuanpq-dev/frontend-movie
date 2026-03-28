@@ -25,6 +25,7 @@ const DataTableContext = forwardRef(
             method = "GET",
             showColumnIndex = true,
             event = {},
+            disableParams = false,
         },
         ref,
     ) => {
@@ -44,30 +45,58 @@ const DataTableContext = forwardRef(
 
             setIsLoading(true);
             try {
-                const params = {
-                    page: page - 1,
-                    size: pageSize,
-                    ...(search?.trim() ? { keyword: search.trim() } : {}),
-                };
-
-                // Add sort params
-                if (sort.length > 0) {
-                    params.sort = sort
-                        .map((s) => `${s.field},${s.desc ? "desc" : "asc"}`)
-                        .join(",");
-                }
-
                 // Get token from cookies (same as ManageMovie.jsx)
                 const token = Cookies.get("accessToken");
                 const headers = token
                     ? { Authorization: `Bearer ${token}` }
                     : {};
 
+                const searchValue = search?.trim();
+
+                const params = disableParams
+                    ? searchValue
+                        ? { keyword: searchValue, search: searchValue }
+                        : undefined
+                    : {
+                          page: page - 1,
+                          size: pageSize,
+                          ...(searchValue
+                              ? {
+                                    keyword: searchValue,
+                                    search: searchValue,
+                                }
+                              : {}),
+                          ...(sort.length > 0
+                              ? {
+                                    sort: sort
+                                        .map(
+                                            (s) =>
+                                                `${s.field},${
+                                                    s.desc ? "desc" : "asc"
+                                                }`,
+                                        )
+                                        .join(","),
+                                }
+                              : {}),
+                      };
+
+                const requestConfig = disableParams
+                    ? { params, headers }
+                    : { params, headers };
+
                 let response;
                 if (method === "GET") {
-                    response = await axios.get(url, { params, headers });
+                    response = await axios.get(url, requestConfig);
                 } else {
-                    response = await axios.post(url, params, { headers });
+                    response = await axios.post(
+                        url,
+                        disableParams
+                            ? searchValue
+                                ? { keyword: searchValue, search: searchValue }
+                                : {}
+                            : params,
+                        { headers },
+                    );
                 }
 
                 const result = response?.data;
@@ -101,7 +130,7 @@ const DataTableContext = forwardRef(
             } finally {
                 setIsLoading(false);
             }
-        }, [url, method, page, pageSize, sort, filter, search]);
+        }, [url, method, page, pageSize, sort, filter, search, disableParams]);
 
         useEffect(() => {
             fetchData();
@@ -197,6 +226,7 @@ DataTableContext.propTypes = {
     showColumnIndex: PropTypes.bool,
     columns: PropTypes.array,
     event: PropTypes.object,
+    disableParams: PropTypes.bool,
 };
 
 export default DataTableContext;

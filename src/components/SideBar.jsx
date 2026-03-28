@@ -7,6 +7,7 @@ import {
     faUser,
     faCreditCard,
     faChartLine,
+    faCommentAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState } from "react";
@@ -79,7 +80,9 @@ const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
                             onLoadCompleteRef.current?.();
                             return;
                         }
-                    } catch {}
+                    } catch {
+                        /* empty */
+                    }
                 }
 
                 const response = await axios.get(
@@ -118,6 +121,11 @@ const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
             path: "/admin/revenue",
             icon: faChartLine,
             label: "Thống kê doanh thu",
+        },
+        {
+            path: "/admin/comment",
+            icon: faCommentAlt,
+            label: "Quản lý bình luận",
         },
     ];
 

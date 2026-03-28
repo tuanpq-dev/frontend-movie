@@ -72,32 +72,15 @@ const ManageRevenue = () => {
         const fetchRevenueData = async () => {
             setLoading(true);
             try {
-                // Fetch statistics overview
-                const statsResponse = await axios.get(
-                    `${API_URL}/api/payment/statistics`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    },
-                );
+                const startDate = dateRange?.[0]?.format("YYYY-MM-DD");
+                const endDate = dateRange?.[1]?.format("YYYY-MM-DD");
 
-                const statsData = statsResponse.data;
-                setStats({
-                    totalRevenue: statsData.totalRevenue || 0,
-                    totalTransactions: statsData.totalTransactions || 0,
-                    successfulTransactions: statsData.statusStats?.success || 0,
-                    newSubscribers: statsData.statusStats?.success || 0,
-                    growthRate: parseFloat(statsData.successRate) || 0,
-                });
-
-                // Fetch revenue by time range
-                const revenueResponse = await axios.get(
-                    `${API_URL}/api/payment/revenue/range`,
+                const response = await axios.get(
+                    `${API_URL}/api/admin/revenue`,
                     {
                         params: {
-                            startDate: dateRange[0].format("YYYY-MM-DD"),
-                            endDate: dateRange[1].format("YYYY-MM-DD"),
+                            ...(startDate ? { startDate } : {}),
+                            ...(endDate ? { endDate } : {}),
                         },
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -105,80 +88,44 @@ const ManageRevenue = () => {
                     },
                 );
 
-                const revenueData = revenueResponse.data;
-                // Transform daily data for chart
-                const chartData = (revenueData.dailyData || []).map((item) => ({
-                    date: `${item._id.day}/${item._id.month}`,
-                    revenue: item.totalRevenue,
-                    transactions: item.count,
-                }));
-                setRevenueByDay(chartData);
+                const data = response?.data || {};
+                const success = data.success || { count: 0, amount: 0 };
+                const pending = data.pending || { count: 0, amount: 0 };
+                const failed = data.failed || { count: 0, amount: 0 };
 
-                // Set payment method data (VNPay is the only method from backend)
+                const totalTransactions = data.totalTransactions || 0;
+                const successRate =
+                    totalTransactions > 0
+                        ? ((success.count || 0) / totalTransactions) * 100
+                        : 0;
+
+                setStats({
+                    totalRevenue: data.totalRevenue || 0,
+                    totalTransactions,
+                    successfulTransactions: success.count || 0,
+                    newSubscribers: success.count || 0,
+                    growthRate: successRate,
+                });
+
+                setRevenueByDay([]);
                 setRevenueByMethod([
-                    { name: "VNPay", value: revenueData.totalRevenue || 0 },
+                    { name: "Thành công", value: success.amount || 0 },
+                    { name: "Đang xử lý", value: pending.amount || 0 },
+                    { name: "Thất bại", value: failed.amount || 0 },
                 ]);
+                setTopUsers([]);
             } catch (error) {
                 console.error("Error fetching revenue data:", error);
-                // Use mock data for demo
                 setStats({
-                    totalRevenue: 15000000,
-                    totalTransactions: 75,
-                    successfulTransactions: 68,
-                    newSubscribers: 45,
-                    growthRate: 12.5,
+                    totalRevenue: 0,
+                    totalTransactions: 0,
+                    successfulTransactions: 0,
+                    newSubscribers: 0,
+                    growthRate: 0,
                 });
-                setRevenueByDay([
-                    { date: "01/01", revenue: 500000, transactions: 3 },
-                    { date: "02/01", revenue: 800000, transactions: 4 },
-                    { date: "03/01", revenue: 600000, transactions: 3 },
-                    { date: "04/01", revenue: 1200000, transactions: 6 },
-                    { date: "05/01", revenue: 900000, transactions: 5 },
-                    { date: "06/01", revenue: 1500000, transactions: 8 },
-                    { date: "07/01", revenue: 700000, transactions: 4 },
-                ]);
-                setRevenueByMethod([
-                    { name: "VNPay", value: 10000000 },
-                    { name: "MoMo", value: 3000000 },
-                    { name: "Chuyển khoản", value: 2000000 },
-                ]);
-                setTopUsers([
-                    {
-                        _id: "1",
-                        username: "user1",
-                        email: "user1@gmail.com",
-                        totalSpent: 600000,
-                        transactions: 3,
-                    },
-                    {
-                        _id: "2",
-                        username: "user2",
-                        email: "user2@gmail.com",
-                        totalSpent: 400000,
-                        transactions: 2,
-                    },
-                    {
-                        _id: "3",
-                        username: "user3",
-                        email: "user3@gmail.com",
-                        totalSpent: 400000,
-                        transactions: 2,
-                    },
-                    {
-                        _id: "4",
-                        username: "user4",
-                        email: "user4@gmail.com",
-                        totalSpent: 200000,
-                        transactions: 1,
-                    },
-                    {
-                        _id: "5",
-                        username: "user5",
-                        email: "user5@gmail.com",
-                        totalSpent: 200000,
-                        transactions: 1,
-                    },
-                ]);
+                setRevenueByDay([]);
+                setRevenueByMethod([]);
+                setTopUsers([]);
             } finally {
                 setLoading(false);
             }

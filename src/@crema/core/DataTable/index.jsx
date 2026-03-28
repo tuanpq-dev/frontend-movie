@@ -64,6 +64,7 @@ const DataTableWrapper = forwardRef(
             method = "GET",
             showColumnIndex = true,
             event = {},
+            disableParams = false,
             ...props
         },
         ref,
@@ -77,6 +78,7 @@ const DataTableWrapper = forwardRef(
                 initTable={initTable}
                 method={method}
                 event={event}
+                disableParams={disableParams}
             >
                 <DataTable {...props} />
             </DataTableContext>
@@ -95,6 +97,7 @@ DataTableWrapper.propTypes = {
     showColumnIndex: PropTypes.bool,
     method: PropTypes.string,
     children: PropTypes.node,
+    disableParams: PropTypes.bool,
 };
 
 DataTableWrapper.defaultProps = {
