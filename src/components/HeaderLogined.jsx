@@ -3,18 +3,20 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import jwt_decode from "jwt-decode";
-
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_URL, getAvatarUrl } from "@libs/config";
+import { useUserContext } from "@context/UserContext";
 
 const HeaderLogined = ({ username, email, avatar }) => {
+    const navigate = useNavigate();
+    const { logout: contextLogout } = useUserContext();
     const [showMenuDrawer, setShowMenuDrawer] = useState(false);
     const [hasPaid, setHasPaid] = useState(false);
 
     const handleLogout = () => {
-        // Xóa cookie chứa access token
-        Cookies.remove("accessToken");
-        window.location.href = "/";
+        contextLogout();
+        navigate("/");
     };
 
     const token = Cookies.get("accessToken");

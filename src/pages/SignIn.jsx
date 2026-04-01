@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { validateEmail } from "../libs/utils/emailValidator";
 import { showSuccessToast, showErrorToast } from "../components/Toast/Toast";
 import { API_URL } from "../libs/config";
+import { useUserContext } from "../context/UserContext";
 
 /* -------------------- InputField -------------------- */
 const InputField = ({
@@ -59,6 +60,7 @@ const InputField = ({
 /* -------------------- SignIn -------------------- */
 const SignIn = () => {
     const navigate = useNavigate();
+    const { refreshUser } = useUserContext();
 
     const [form, setForm] = useState({
         email: "",
@@ -116,6 +118,9 @@ const SignIn = () => {
                 secure: true,
                 sameSite: "strict",
             });
+
+            // Refresh user context to update header
+            await refreshUser();
 
             showSuccessToast(
                 "Đăng nhập thành công",

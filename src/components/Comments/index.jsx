@@ -7,7 +7,6 @@ import { API_URL } from "@libs/config";
 
 const Comments = ({ movieId, userId, onLoadComplete }) => {
     const [loading, setLoading] = useState(true);
-    console.log("loading", loading);
     const [backendComments, setBackendComments] = useState([]);
     const [activeComment, setActiveComment] = useState(null);
     const token = Cookies.get("accessToken");

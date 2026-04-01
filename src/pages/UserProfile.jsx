@@ -8,9 +8,12 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import ChangePasswordModal from "@components/ChangePasswordModal";
 import { API_URL, getAvatarUrl } from "@libs/config";
+import { useUserContext } from "@context/UserContext";
+
 const UserProfile = () => {
     const { handleSubmit, register, setValue } = useForm();
     const navigate = useNavigate();
+    const { logout: contextLogout } = useUserContext();
     const [password, setPassword] = useState("");
     const [avatarPreview, setAvatarPreview] = useState("/img-placeholder.jpg");
     const [userName, setUserName] = useState("");
@@ -99,9 +102,8 @@ const UserProfile = () => {
         }
     };
     const handleLogout = () => {
-        // Xóa cookie chứa access token
-        Cookies.remove("accessToken");
-        window.location.href = "/";
+        contextLogout();
+        navigate("/");
     };
     return (
         <div className="flex min-h-screen items-center justify-center bg-[#292e39]">

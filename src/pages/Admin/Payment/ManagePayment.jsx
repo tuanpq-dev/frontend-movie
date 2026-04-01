@@ -205,6 +205,77 @@ const PaymentDetailModal = ({ visible, payment, onClose }) => {
     );
 };
 
+// Filter Toolbar Component
+const FilterToolbar = ({ dateRange, setDateRange, statusFilter, setStatusFilter, onExport }) => {
+    const { setFilter } = useDataTableContext() || {};
+
+    const handleDateRangeChange = (dates) => {
+        setDateRange(dates);
+        
+        if (setFilter) {
+            setFilter((prev) => {
+                const newFilter = { ...prev };
+                if (dates && dates.length === 2) {
+                    newFilter.startDate = dates[0].format("YYYY-MM-DD");
+                    newFilter.endDate = dates[1].format("YYYY-MM-DD");
+                } else {
+                    delete newFilter.startDate;
+                    delete newFilter.endDate;
+                }
+                return newFilter;
+            });
+        }
+    };
+
+    const handleStatusChange = (value) => {
+        setStatusFilter(value);
+        
+        if (setFilter) {
+            setFilter((prev) => {
+                const newFilter = { ...prev };
+                if (value) {
+                    newFilter.status = value;
+                } else {
+                    delete newFilter.status;
+                }
+                return newFilter;
+            });
+        }
+    };
+
+    return (
+        <Space wrap className="w-full sm:w-auto">
+            <RangePicker
+                placeholder={["Từ ngày", "Đến ngày"]}
+                onChange={handleDateRangeChange}
+                value={dateRange}
+                format="DD/MM/YYYY"
+                className="w-full sm:w-auto"
+            />
+            <Select
+                placeholder="Trạng thái"
+                allowClear
+                onChange={handleStatusChange}
+                value={statusFilter}
+                className="w-full sm:w-32"
+                options={[
+                    { value: "success", label: "Thành công" },
+                    { value: "pending", label: "Đang xử lý" },
+                    { value: "failed", label: "Thất bại" },
+                    { value: "cancelled", label: "Đã hủy" },
+                ]}
+            />
+            <Button
+                icon={<FontAwesomeIcon icon={faFileExport} />}
+                onClick={onExport}
+                className="w-full sm:w-auto"
+            >
+                <span className="hidden sm:inline">Xuất Excel</span>
+            </Button>
+        </Space>
+    );
+};
+
 const ManagePayment = () => {
     const [detailModalVisible, setDetailModalVisible] = useState(false);
     const [selectedPayment, setSelectedPayment] = useState(null);
@@ -220,42 +291,6 @@ const ManagePayment = () => {
     const closeDetailModal = () => {
         setDetailModalVisible(false);
         setSelectedPayment(null);
-    };
-
-    const handleExport = async () => {
-        try {
-            const params = {};
-            if (dateRange) {
-                params.startDate = dateRange[0].format("YYYY-MM-DD");
-                params.endDate = dateRange[1].format("YYYY-MM-DD");
-            }
-            if (statusFilter) {
-                params.status = statusFilter;
-            }
-
-            const response = await axios.get(`${API_URL}/api/payment/export`, {
-                params,
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                responseType: "blob",
-            });
-
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute(
-                "download",
-                `payments_${dayjs().format("YYYYMMDD")}.xlsx`,
-            );
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            message.success("Xuất file thành công!");
-        } catch (error) {
-            message.error("Lỗi khi xuất file");
-            console.error("Export error:", error);
-        }
     };
 
     const columns = [
@@ -335,33 +370,51 @@ const ManagePayment = () => {
         },
     ];
 
+    const handleExport = async () => {
+        try {
+            const params = {};
+            if (dateRange) {
+                params.startDate = dateRange[0].format("YYYY-MM-DD");
+                params.endDate = dateRange[1].format("YYYY-MM-DD");
+            }
+            if (statusFilter) {
+                params.status = statusFilter;
+            }
+
+            const response = await axios.get(`${API_URL}/api/payment/export`, {
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                responseType: "blob",
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute(
+                "download",
+                `payments_${dayjs().format("YYYYMMDD")}.xlsx`,
+            );
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            message.success("Xuất file thành công!");
+        } catch (error) {
+            message.error("Lỗi khi xuất file");
+            console.error("Export error:", error);
+        }
+    };
+
     const toolbars = [
-        <Space key="filters" wrap className="w-full sm:w-auto">
-            <RangePicker
-                placeholder={["Từ ngày", "Đến ngày"]}
-                onChange={(dates) => setDateRange(dates)}
-                className="w-full sm:w-auto"
-            />
-            <Select
-                placeholder="Trạng thái"
-                allowClear
-                onChange={(value) => setStatusFilter(value)}
-                className="w-full sm:w-32"
-                options={[
-                    { value: "success", label: "Thành công" },
-                    { value: "pending", label: "Đang xử lý" },
-                    { value: "failed", label: "Thất bại" },
-                    { value: "cancelled", label: "Đã hủy" },
-                ]}
-            />
-            <Button
-                icon={<FontAwesomeIcon icon={faFileExport} />}
-                onClick={handleExport}
-                className="w-full sm:w-auto"
-            >
-                <span className="hidden sm:inline">Xuất Excel</span>
-            </Button>
-        </Space>,
+        <FilterToolbar
+            key="filters"
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            onExport={handleExport}
+        />,
     ];
 
     return (

@@ -17,6 +17,7 @@ import CreateMovie from "@pages/Admin/Movie/CreateMovie";
 import EditMovie from "@pages/Admin/Movie/EditMovie";
 import UserProfile from "@pages/UserProfile";
 import ModalProvider from "./context/ModalProvider";
+import { UserProvider } from "./context/UserContext";
 import Toast from "./components/Toast/Toast";
 import ManageComment from "@pages/Admin/ManageComment";
 import ManageUser from "@pages/Admin/User/ManageUser";
@@ -140,10 +141,12 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")).render(
     <StrictMode>
         <IntlProvider locale="vi" messages={{}}>
-            <ModalProvider>
-                <Toast />
-                <RouterProvider router={router} />
-            </ModalProvider>
+            <UserProvider>
+                <ModalProvider>
+                    <Toast />
+                    <RouterProvider router={router} />
+                </ModalProvider>
+            </UserProvider>
         </IntlProvider>
     </StrictMode>,
 );

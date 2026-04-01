@@ -22,10 +22,8 @@ const Comment = ({
     const canReply = !!currentUserId;
     const canEdit =
         currentUserId === comment.userId && comment?.replies?.length === 0;
-    console.log("comment uid", comment?.userId);
     const canDelete =
         currentUserId === comment.userId && comment?.replies?.length === 0;
-    console.log("comment day", comment);
 
     function timeAgo(createdAt) {
         const now = new Date();

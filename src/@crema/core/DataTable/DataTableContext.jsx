@@ -78,6 +78,7 @@ const DataTableContext = forwardRef(
                                         .join(","),
                                 }
                               : {}),
+                          ...filter, // Merge filter params
                       };
 
                 const requestConfig = disableParams
