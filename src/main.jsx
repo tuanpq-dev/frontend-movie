@@ -33,6 +33,7 @@ import AdminLayout from "@pages/Admin/AdminLayout";
 import VnPayReturn from "@pages/VNPayReturn";
 import ManageMovie2 from "@pages/Admin/Movie/ManageMovie2";
 import CartoonMovie from "@pages/CartoonMovie";
+import Forbidden from "@pages/Forbidden";
 const router = createBrowserRouter([
     {
         element: <Root />,
@@ -135,6 +136,10 @@ const router = createBrowserRouter([
     {
         path: "/VnPayReturn",
         element: <VnPayReturn />,
+    },
+    {
+        path: "/403",
+        element: <Forbidden />,
     },
 ]);
 

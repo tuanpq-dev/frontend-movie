@@ -105,6 +105,7 @@ const UserForm = ({
                         options={[
                             { value: false, label: "Người dùng" },
                             { value: true, label: "Quản trị viên" },
+                            { value: true, label: "Mod" },
                         ]}
                     />
                 </Col>

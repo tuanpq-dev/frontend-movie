@@ -16,6 +16,21 @@ const DEFAULT_AVATAR =
 
 const EMPTY_INITIAL_VALUES = {};
 
+const normalizeUserInitialValues = (user) => {
+    if (!user) return EMPTY_INITIAL_VALUES;
+
+    const moduleValues = Array.isArray(user.modules)
+        ? user.modules
+              .map((m) => (typeof m === "string" ? m : m?.id || m?._id))
+              .filter(Boolean)
+        : [];
+
+    return {
+        ...user,
+        modules: moduleValues,
+    };
+};
+
 // Create context for modal actions
 const UserModalContext = createContext({});
 
@@ -144,17 +159,29 @@ const ManageUser = () => {
             key: "isAdmin",
             width: 120,
             responsive: ["sm"],
-            render: (isAdmin) => (
-                <span
-                    className={`rounded-full px-2 py-1 text-xs font-medium ${
-                        isAdmin
-                            ? "bg-red-100 text-red-600"
-                            : "bg-blue-100 text-blue-600"
-                    }`}
-                >
-                    {isAdmin ? "Quản trị" : "Người dùng"}
-                </span>
-            ),
+            render: (isAdmin, record) => {
+                const isModerator =
+                    !isAdmin && Array.isArray(record?.modules) && record.modules.length > 0;
+
+                let className = "bg-blue-100 text-blue-600";
+                let label = "Người dùng";
+
+                if (isAdmin) {
+                    className = "bg-red-100 text-red-600";
+                    label = "Quản trị";
+                } else if (isModerator) {
+                    className = "bg-amber-100 text-amber-700";
+                    label = "Mod";
+                }
+
+                return (
+                    <span
+                        className={`rounded-full px-2 py-1 text-xs font-medium ${className}`}
+                    >
+                        {label}
+                    </span>
+                );
+            },
         },
         {
             title: "Hành động",
@@ -212,7 +239,7 @@ const ManageUser = () => {
                                             ? "Chỉnh sửa người dùng"
                                             : "Thêm người dùng mới"
                                     }
-                                    initialValues={editingUser || EMPTY_INITIAL_VALUES}
+                                    initialValues={normalizeUserInitialValues(editingUser)}
                                     width="90%"
                                     style={{ maxWidth: 700 }}
                                     customSubmit={async (
@@ -222,6 +249,10 @@ const ManageUser = () => {
                                         const submitData = new FormData();
 
                                         Object.keys(formData).forEach((key) => {
+                                            if (key === "modules") {
+                                                return;
+                                            }
+
                                             if (
                                                 key !== "avatar" &&
                                                 formData[key] !== undefined &&
@@ -233,6 +264,16 @@ const ManageUser = () => {
                                                 );
                                             }
                                         });
+
+                                        if (!formData.isAdmin) {
+                                            const selectedModules = Array.isArray(formData.modules)
+                                                ? formData.modules
+                                                : [];
+
+                                            selectedModules.forEach((moduleId) => {
+                                                submitData.append("modules", moduleId);
+                                            });
+                                        }
 
                                         if (avatarFile) {
                                             submitData.append(

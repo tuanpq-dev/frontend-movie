@@ -19,6 +19,9 @@ export const UserProvider = ({ children }) => {
     const [email, setEmail] = useState("");
     const [avatar, setAvatar] = useState("");
     const [isAdmin, setIsAdmin] = useState(false);
+    const [role, setRole] = useState("");
+    const [permissions, setPermissions] = useState([]);
+    const [modules, setModules] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchUser = async () => {
@@ -30,6 +33,27 @@ export const UserProvider = ({ children }) => {
                 const userId = decodedToken.id;
                 setId(userId);
                 setIsAdmin(decodedToken.isAdmin || false);
+
+                // Load role, permissions, modules from localStorage
+                const storedRole = localStorage.getItem("userRole");
+                const storedPermissions = localStorage.getItem("userPermissions");
+                const storedModules = localStorage.getItem("userModules");
+
+                if (storedRole) setRole(storedRole);
+                if (storedPermissions) {
+                    try {
+                        setPermissions(JSON.parse(storedPermissions));
+                    } catch {
+                        setPermissions([]);
+                    }
+                }
+                if (storedModules) {
+                    try {
+                        setModules(JSON.parse(storedModules));
+                    } catch {
+                        setModules([]);
+                    }
+                }
 
                 const response = await axios.get(
                     `${API_URL}/api/users/${userId}`,
@@ -52,6 +76,9 @@ export const UserProvider = ({ children }) => {
                 setEmail("");
                 setAvatar("");
                 setIsAdmin(false);
+                setRole("");
+                setPermissions([]);
+                setModules([]);
             }
         } catch (error) {
             console.error("Lỗi khi lấy dữ liệu người dùng:", error);
@@ -62,6 +89,9 @@ export const UserProvider = ({ children }) => {
             setEmail("");
             setAvatar("");
             setIsAdmin(false);
+            setRole("");
+            setPermissions([]);
+            setModules([]);
         } finally {
             setIsLoading(false);
         }
@@ -74,12 +104,18 @@ export const UserProvider = ({ children }) => {
 
     const logout = () => {
         Cookies.remove("accessToken");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("userPermissions");
+        localStorage.removeItem("userModules");
         setIsLoggedIn(false);
         setId("");
         setUserName("");
         setEmail("");
         setAvatar("");
         setIsAdmin(false);
+        setRole("");
+        setPermissions([]);
+        setModules([]);
     };
 
     useEffect(() => {
@@ -93,6 +129,9 @@ export const UserProvider = ({ children }) => {
         email,
         avatar,
         isAdmin,
+        role,
+        permissions,
+        modules,
         isLoading,
         refreshUser,
         logout,

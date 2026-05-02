@@ -20,7 +20,7 @@ const MovieDetail = () => {
     const [isLoadingMovie, setIsLoadingMovie] = useState(true);
     const [isLoadingPayment, setIsLoadingPayment] = useState(false);
     const [isShowModal, setIsShowModal] = useState(false);
-    
+
     const { id: userId, isAdmin } = useUserContext();
     const { handlePlayTrailer } = useModalContext();
 
@@ -78,11 +78,17 @@ const MovieDetail = () => {
         } catch (error) {
             console.error("Lỗi khi thêm phim vào danh sách yêu thích:", error);
             const status = error.response?.status;
-            
+
             if (status === 400) {
-                showSuccessToast("Thông báo", "Phim này đã có trong danh sách yêu thích");
+                showSuccessToast(
+                    "Thông báo",
+                    "Phim này đã có trong danh sách yêu thích",
+                );
             } else if (status === 403) {
-                showSuccessToast("Lỗi", "Bạn không có quyền thêm phim vào danh sách");
+                showSuccessToast(
+                    "Lỗi",
+                    "Bạn không có quyền thêm phim vào danh sách",
+                );
             } else {
                 showSuccessToast("Lỗi", "Không thể thêm phim vào danh sách");
             }
@@ -128,7 +134,7 @@ const MovieDetail = () => {
                 `${API_URL}/api/payment/create_payment`,
                 { userId },
             );
-            
+
             window.open(data.paymentUrl, "_blank");
 
             // Listen for payment success from VNPay return tab
@@ -139,9 +145,9 @@ const MovieDetail = () => {
                     navigate(`/watch/${movieInfo._id}`);
                 }
             };
-            
+
             window.addEventListener("storage", onPaymentSuccess);
-            
+
             // Cleanup listener after 10 minutes
             setTimeout(() => {
                 window.removeEventListener("storage", onPaymentSuccess);
@@ -231,41 +237,70 @@ const MovieDetail = () => {
                             className="h-full w-full object-cover"
                         />
                     </figure>
-                    
+
                     {/* Movie Info Overlay */}
                     <div className="absolute bottom-5 left-5 sm:bottom-6 md:bottom-7 lg:bottom-9">
                         <div className="flex items-center gap-[10px]">
                             {movieInfo.voteAverage > 0 && (
                                 <div className="flex items-center gap-1">
                                     <CircularProgressBar
-                                        percent={Math.round(movieInfo.voteAverage * 10)}
+                                        percent={Math.round(
+                                            movieInfo.voteAverage * 10,
+                                        )}
                                     />
                                     <span className="text-white">Rating</span>
                                 </div>
                             )}
                             <ul className="flex flex-wrap gap-2">
-                                {(movieInfo.genres || []).slice(0, 3).map((genre) => (
-                                    <li
-                                        key={genre._id}
-                                        className="rounded-lg bg-white p-[6px] text-sm font-medium text-black"
-                                    >
-                                        {genre.nameGenre}
-                                    </li>
-                                ))}
+                                {(movieInfo.genres || [])
+                                    .slice(0, 3)
+                                    .map((genre) => (
+                                        <li
+                                            key={genre._id}
+                                            className="rounded-lg bg-white p-[6px] text-sm font-medium text-black"
+                                        >
+                                            {genre.nameGenre}
+                                        </li>
+                                    ))}
                             </ul>
                         </div>
-                        
+
                         {/* Action Buttons */}
                         <div className="left-5 mt-2 flex flex-wrap items-center gap-2 sm:mt-3">
                             <button
-                                className="flex h-10 items-center justify-center gap-2 rounded-full bg-black px-3 font-medium text-white hover:bg-gray-800 transition-colors"
-                                onClick={() => handlePlayTrailer(movieInfo?.trailerKey)}
+                                className="flex h-10 items-center justify-center gap-2 rounded-full bg-black px-3 font-medium text-white transition-colors hover:bg-gray-800"
+                                onClick={() =>
+                                    handlePlayTrailer(movieInfo?.trailerKey)
+                                }
                                 aria-label="Xem trailer"
                             >
                                 <FontAwesomeIcon icon={faFilm} />
                                 Xem Trailer
                             </button>
-                            {userId && (
+                            <button
+                                onClick={handleWatchMovie}
+                                className="flex h-10 items-center justify-center gap-2 rounded-full bg-[#ffb700] px-5 font-medium text-[#171c28] transition-colors hover:bg-[#e6a600]"
+                                aria-label="Xem phim ngay"
+                            >
+                                <FontAwesomeIcon
+                                    icon={faPlay}
+                                    className="text-white"
+                                />
+                                Xem ngay
+                            </button>
+                            <button
+                                className="flex h-10 items-center justify-center gap-2 rounded-full bg-[#ff0000] px-5 text-base text-white transition-colors hover:bg-[#cc0000]"
+                                onClick={handleAddFavoriteMovie}
+                                aria-label="Thêm vào yêu thích"
+                            >
+                                <img
+                                    src="/heart.svg"
+                                    alt=""
+                                    className="invert"
+                                />
+                                Thêm vào yêu thích
+                            </button>
+                            {/* {userId && (
                                 <>
                                     <button
                                         onClick={handleWatchMovie}
@@ -284,7 +319,7 @@ const MovieDetail = () => {
                                         Thêm vào yêu thích
                                     </button>
                                 </>
-                            )}
+                            )} */}
                         </div>
                     </div>
                 </div>
@@ -296,38 +331,46 @@ const MovieDetail = () => {
                     </h1>
                     {movieInfo.time && (
                         <p>
-                            <span className="font-medium">Thời gian:</span> {movieInfo.time}
+                            <span className="font-medium">Thời gian:</span>{" "}
+                            {movieInfo.time}
                         </p>
                     )}
                     {movieInfo.year && (
                         <p>
-                            <span className="font-medium">Năm phát hành:</span> {movieInfo.year}
+                            <span className="font-medium">Năm phát hành:</span>{" "}
+                            {movieInfo.year}
                         </p>
                     )}
                     {genresText && (
                         <p>
-                            <span className="font-medium">Thể loại:</span> {genresText}
+                            <span className="font-medium">Thể loại:</span>{" "}
+                            {genresText}
                         </p>
                     )}
                     {movieInfo.content && (
                         <p>
-                            <span className="font-medium">Nội dung:</span> {movieInfo.content}
+                            <span className="font-medium">Nội dung:</span>{" "}
+                            {movieInfo.content}
                         </p>
                     )}
                     {movieInfo.director && (
                         <p>
-                            <span className="font-medium">Đạo diễn:</span> {movieInfo.director}
+                            <span className="font-medium">Đạo diễn:</span>{" "}
+                            {movieInfo.director}
                         </p>
                     )}
                     {movieInfo.actor && (
                         <p>
-                            <span className="font-medium">Diễn viên:</span> {movieInfo.actor}
+                            <span className="font-medium">Diễn viên:</span>{" "}
+                            {movieInfo.actor}
                         </p>
                     )}
                 </div>
 
                 {/* Comments Section */}
-                {movieInfo._id && <Comments movieId={movieInfo._id} userId={userId} />}
+                {movieInfo._id && (
+                    <Comments movieId={movieInfo._id} userId={userId} />
+                )}
 
                 <Toast />
 

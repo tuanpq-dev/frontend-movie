@@ -16,6 +16,7 @@ import Cookies from "js-cookie";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
 import { API_URL, getAvatarUrl } from "@libs/config";
+import { useUserContext } from "../context/UserContext";
 
 const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
     const [userData, setUserData] = useState(null);
@@ -24,10 +25,14 @@ const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const location = useLocation();
+    const { modules, role, isAdmin } = useUserContext();
 
     const handleLogout = () => {
         Cookies.remove("accessToken");
         sessionStorage.removeItem("sidebarUserData");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("userPermissions");
+        localStorage.removeItem("userModules");
         window.location.href = "/";
     };
 
@@ -109,25 +114,35 @@ const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
     }, [token]);
 
     const menuItems = [
-        { path: "/admin/movie", icon: faFilm, label: "Quản lý phim" },
-        { path: "/admin/genre", icon: faTableList, label: "Quản lý thể loại" },
-        { path: "/admin/user", icon: faUser, label: "Quản lý tài khoản" },
+        { path: "/admin/movie", icon: faFilm, label: "Quản lý phim", moduleId: "movies" },
+        { path: "/admin/genre", icon: faTableList, label: "Quản lý thể loại", moduleId: "genres" },
+        { path: "/admin/user", icon: faUser, label: "Quản lý tài khoản", moduleId: "users" },
         {
             path: "/admin/payment",
             icon: faCreditCard,
             label: "Quản lý thanh toán",
+            moduleId: "payments",
         },
         {
             path: "/admin/revenue",
             icon: faChartLine,
             label: "Thống kê doanh thu",
+            moduleId: "revenue",
         },
         {
             path: "/admin/comment",
             icon: faCommentAlt,
             label: "Quản lý bình luận",
+            moduleId: "comments",
         },
     ];
+
+    // Filter menu items based on user's allowed modules
+    const filteredMenuItems = isAdmin
+        ? menuItems // Admin sees everything
+        : menuItems.filter((item) =>
+              modules.some((module) => module.id === item.moduleId)
+          );
 
     return (
         <>
@@ -208,7 +223,7 @@ const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
                                 {userData?.username || "Admin"}
                             </p>
                             <p className="text-xs text-gray-500">
-                                Quản trị viên
+                                {isAdmin ? "Quản trị viên" : role === "mod" ? "Kiểm duyệt viên" : "Người dùng"}
                             </p>
                         </div>
                     </div>
@@ -217,7 +232,7 @@ const SideBar = ({ onLoadComplete, onCollapsedChange }) => {
                 {/* Navigation */}
                 <nav className="px-3 py-4">
                     <ul className="space-y-1">
-                        {menuItems.map((item) => (
+                        {filteredMenuItems.map((item) => (
                             <li key={item.path}>
                                 <button
                                     onClick={() => handleNavigate(item.path)}

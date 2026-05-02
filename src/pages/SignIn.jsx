@@ -119,6 +119,23 @@ const SignIn = () => {
                 sameSite: "strict",
             });
 
+            // Store role, permissions, and modules in localStorage
+            if (data.role) {
+                localStorage.setItem("userRole", data.role);
+            }
+            if (data.permissions) {
+                localStorage.setItem(
+                    "userPermissions",
+                    JSON.stringify(data.permissions),
+                );
+            }
+            if (data.modules) {
+                localStorage.setItem(
+                    "userModules",
+                    JSON.stringify(data.modules),
+                );
+            }
+
             // Refresh user context to update header
             await refreshUser();
 
