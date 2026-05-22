@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 
 const CommentForm = ({
     handleSubmit,
@@ -6,37 +6,45 @@ const CommentForm = ({
     hasCancelButton = true,
     initialText = "",
     handleCancel,
+    isSubmitting = false,
+    className = "",
 }) => {
     const [text, setText] = useState(initialText);
-    const isTextareaDisabled = text.length === 0;
+    const isTextareaDisabled = text.trim().length === 0;
 
-    const onSubmit = (event) => {
+    const onSubmit = async (event) => {
         event.preventDefault();
-        handleSubmit(text);
-        setText("");
+        if (isTextareaDisabled || isSubmitting) return;
+
+        const submitted = await handleSubmit(text.trim());
+        if (submitted !== false) {
+            setText("");
+        }
     };
 
     return (
-        <form onSubmit={onSubmit} className="mt-1">
+        <form onSubmit={onSubmit} className={`mt-2 ${className}`}>
             <textarea
-                name=""
-                id=""
                 value={text}
-                className="h-16 w-full resize-none rounded-xl bg-white p-4 text-black"
+                className="min-h-20 w-full resize-none rounded-xl border border-white/10 bg-[#171c28] p-3 text-sm text-white outline-none transition-colors placeholder:text-gray-400 focus:border-[#ffb700] focus:ring-2 focus:ring-[#ffb700]/20 disabled:cursor-not-allowed disabled:opacity-70"
                 placeholder="Nhập bình luận"
-                onChange={(e) => setText(e.target.value)}
-            ></textarea>
-            <div className="mt-1 flex gap-2">
+                onChange={(event) => setText(event.target.value)}
+                disabled={isSubmitting}
+            />
+            <div className="mt-2.5 flex flex-wrap gap-2">
                 <button
-                    className="flex h-9 w-[90px] cursor-pointer items-center justify-center rounded-xl bg-[#0d6efd]"
-                    disabled={isTextareaDisabled}
+                    type="submit"
+                    className="flex min-h-9 min-w-[96px] cursor-pointer items-center justify-center rounded-full bg-[#ffb700] px-4 text-sm font-semibold text-[#171c28] transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={isTextareaDisabled || isSubmitting}
                 >
-                    {submitLabel}
+                    {isSubmitting ? "Đang gửi..." : submitLabel}
                 </button>
                 {hasCancelButton && (
                     <button
-                        className="flex h-9 w-[90px] items-center justify-center rounded-xl bg-[#6c757d]"
+                        type="button"
+                        className="flex min-h-9 min-w-[76px] items-center justify-center rounded-full bg-white/10 px-3 text-sm text-white transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
                         onClick={handleCancel}
+                        disabled={isSubmitting}
                     >
                         Hủy
                     </button>
@@ -45,4 +53,5 @@ const CommentForm = ({
         </form>
     );
 };
-export default CommentForm;
+
+export default memo(CommentForm);

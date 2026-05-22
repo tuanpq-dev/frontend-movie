@@ -1,4 +1,4 @@
-import React, {
+import {
     createContext,
     forwardRef,
     useContext,
@@ -6,6 +6,7 @@ import React, {
     useImperativeHandle,
     useEffect,
     useCallback,
+    useMemo,
 } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
@@ -175,29 +176,46 @@ const DataTableContext = forwardRef(
             setColumns(cols);
         }, [columnsProp, showColumnIndex]);
 
-        const contextValue = {
-            isLoading,
-            data,
-            total,
-            page,
-            pageSize,
-            sort,
-            filter,
-            search,
-            tableSize,
-            columns,
-            event,
+        const contextValue = useMemo(
+            () => ({
+                isLoading,
+                data,
+                total,
+                page,
+                pageSize,
+                sort,
+                filter,
+                search,
+                tableSize,
+                columns,
+                event,
 
-            setPage,
-            setPageSize,
-            setSort,
-            setFilter,
-            setSearch,
-            setTableSize,
-            setColumns,
-            setColumnHidden,
-            reloadPage,
-        };
+                setPage,
+                setPageSize,
+                setSort,
+                setFilter,
+                setSearch,
+                setTableSize,
+                setColumns,
+                setColumnHidden,
+                reloadPage,
+            }),
+            [
+                isLoading,
+                data,
+                total,
+                page,
+                pageSize,
+                sort,
+                filter,
+                search,
+                tableSize,
+                columns,
+                event,
+                setColumnHidden,
+                reloadPage,
+            ],
+        );
 
         useImperativeHandle(ref, () => ({
             setPage,

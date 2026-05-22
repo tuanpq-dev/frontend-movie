@@ -1,193 +1,184 @@
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useState } from "react";
-import Cookies from "js-cookie";
-import jwt_decode from "jwt-decode";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API_URL, getAvatarUrl } from "@libs/config";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { getAvatarUrl } from "@libs/config";
 import { useUserContext } from "@context/UserContext";
+import { usePaymentStatus } from "@/hooks/useMovieData";
+import HeaderSearch from "./HeaderSearch";
 
 const HeaderLogined = ({ username, email, avatar }) => {
     const navigate = useNavigate();
-    const { logout: contextLogout } = useUserContext();
+    const { id: userId, logout: contextLogout } = useUserContext();
     const [showMenuDrawer, setShowMenuDrawer] = useState(false);
-    const [hasPaid, setHasPaid] = useState(false);
+    const { data: paymentStatus } = usePaymentStatus(userId, {
+        enabled: Boolean(userId),
+        staleTime: 30 * 1000,
+    });
+    const hasPaid = Boolean(paymentStatus?.paid);
+    const closeMenuDrawer = () => setShowMenuDrawer(false);
 
     const handleLogout = () => {
         contextLogout();
         navigate("/");
     };
 
-    const token = Cookies.get("accessToken");
-
-    useEffect(() => {
-        if (!token) return;
-
-        const checkPaymentStatus = async () => {
-            try {
-                const decodedToken = jwt_decode(token);
-
-                const response = await axios.get(
-                    `${API_URL}/api/payment/payment-status/${decodedToken.id}`,
-                );
-
-                setHasPaid(response.data.paid);
-            } catch (error) {
-                console.error("Lỗi khi kiểm tra thanh toán:", error);
-            }
-        };
-
-        checkPaymentStatus();
-    }, [token]);
-
     return (
-        <header className="sticky top-0 z-[8] flex justify-between bg-slate-950 px-5 py-5 font-medium text-white lg:px-8">
-            <button className="lg:hidden">
+        <header className="sticky top-0 z-[8] flex h-[68px] items-center gap-3 bg-[#151923]/95 px-3 font-medium text-white shadow-lg shadow-black/20 backdrop-blur sm:px-4 min-[1025px]:h-[76px] min-[1025px]:gap-4 min-[1025px]:px-5">
+            <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 min-[1025px]:hidden">
                 <img
                     src="/more.svg"
                     alt=""
-                    className="brightness-[1.08] contrast-[1.07] hue-rotate-[42deg] invert saturate-100 sepia"
+                    className="h-4 w-4 brightness-[1.08] contrast-[1.07] hue-rotate-[42deg] invert saturate-100 sepia"
                     onClick={() => {
                         setShowMenuDrawer(true);
                     }}
                 />
             </button>
-            <div className="flex items-center">
-                <h1 className="absolute left-[50%] top-[50%] -translate-x-[50%] -translate-y-[50%] lg:static lg:translate-x-0 lg:translate-y-0">
-                    <a
-                        href="/"
-                        className="text-2xl font-bold uppercase text-red-500 md:text-3xl"
-                    >
-                        Mọt phim
-                    </a>
-                </h1>
-                <nav
-                    className={`-translate-x-full lg:mx-6 lg:translate-x-0 ${
-                        showMenuDrawer
-                            ? "fixed bottom-0 left-0 right-1/4 top-0 z-10 !block translate-x-0 bg-[#292e39] py-5 shadow-lg shadow-[#171c2866] transition-transform duration-500"
-                            : ""
-                    }`}
+
+            <Link to="/" className="flex shrink-0 items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/80 text-xs text-[#ffc83d] min-[1025px]:h-9 min-[1025px]:w-9">
+                    ▶
+                </span>
+                <span className="hidden sm:block">
+                    <span className="block text-lg font-black leading-5">
+                        Một Phim
+                    </span>
+                    <span className="block text-[10px] text-gray-400">
+                        Phim hay có rõ
+                    </span>
+                </span>
+            </Link>
+
+            <HeaderSearch className="hidden w-[min(390px,30vw)] min-[1025px]:block" />
+
+            <nav
+                className={`-translate-x-full min-[1025px]:ml-4 min-[1025px]:flex-1 min-[1025px]:translate-x-0 ${
+                    showMenuDrawer
+                        ? "fixed bottom-0 left-0 right-[15%] top-0 z-10 !block translate-x-0 overflow-y-auto bg-[#0b111d] py-5 shadow-2xl shadow-black/60 transition-transform duration-500 sm:right-1/4"
+                        : ""
+                }`}
+            >
+                <button
+                    className={`hidden px-5 pb-3 ${showMenuDrawer ? "!block" : ""}`}
                 >
-                    <button
-                        className={`hidden px-5 pb-3 ${showMenuDrawer ? "!block" : ""}`}
-                    >
-                        <img
-                            src="/back.svg"
-                            alt=""
-                            className="brightness-[1.08] contrast-[1.07] hue-rotate-[42deg] invert saturate-100 sepia"
-                            onClick={() => {
-                                setShowMenuDrawer(false);
-                            }}
-                        />
-                    </button>
-                    <ul className="flex flex-col px-5 lg:flex-row lg:gap-6">
-                        <li>
-                            <a
-                                href="/movie"
-                                className={`hidden md:text-lg lg:block lg:py-0 ${
-                                    showMenuDrawer ? "!inline-block py-3" : ""
-                                }`}
-                            >
-                                Phim lẻ
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="/tv"
-                                className={`hidden md:text-lg lg:block lg:py-0 ${
-                                    showMenuDrawer ? "!inline-block py-3" : ""
-                                }`}
-                            >
-                                Phim bộ
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="/cartoon"
-                                className={`hidden md:text-lg lg:block lg:py-0 ${
-                                    showMenuDrawer ? "!inline-block py-3" : ""
-                                }`}
-                            >
-                                Hoạt hình
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="/search"
-                                className={`hidden ${
-                                    showMenuDrawer
-                                        ? "!flex h-full items-center rounded-lg py-3 shadow-[#00000033] lg:h-12 lg:w-12 lg:justify-center lg:py-0"
-                                        : ""
-                                }`}
-                            >
-                                <FontAwesomeIcon icon={faMagnifyingGlass} />
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-                <a
-                    href="/search"
-                    className="ml-10 hidden h-12 w-12 items-center justify-center rounded-lg bg-[#292d38] shadow-[#00000033] lg:flex"
-                >
-                    <FontAwesomeIcon icon={faMagnifyingGlass} />
-                </a>
-            </div>
-            <div className="group relative">
-                <img
-                    src={getAvatarUrl(avatar)}
-                    alt=""
-                    className="block h-[50px] w-[50px] cursor-pointer rounded-lg object-cover"
+                    <img
+                        src="/back.svg"
+                        alt=""
+                        className="brightness-[1.08] contrast-[1.07] hue-rotate-[42deg] invert saturate-100 sepia"
+                        onClick={() => {
+                            setShowMenuDrawer(false);
+                        }}
+                    />
+                </button>
+                <HeaderSearch
+                    className="mx-4 mb-5 min-[1025px]:hidden"
+                    onNavigate={closeMenuDrawer}
                 />
-                <div className="absolute right-0 top-12 hidden w-[300px] pt-6 group-hover:block">
-                    <div className="rounded-2xl bg-[#2f3441] p-8 shadow-sm shadow-slate-600">
-                        <div className="absolute -top-3 right-2 inline-block border-[20px] border-b-[#2e3340] border-l-transparent border-r-transparent border-t-transparent"></div>
+                <ul className="flex flex-col px-5 min-[1025px]:flex-row min-[1025px]:items-center min-[1025px]:justify-center min-[1025px]:gap-6 min-[1025px]:px-0">
+                    <li>
+                        <Link
+                            to="/movie"
+                            onClick={closeMenuDrawer}
+                            className={`hidden py-3 text-sm text-gray-200 transition-colors hover:text-white min-[1025px]:block ${
+                                showMenuDrawer ? "!inline-block" : ""
+                            }`}
+                        >
+                            Phim lẻ
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            to="/tv"
+                            onClick={closeMenuDrawer}
+                            className={`hidden py-3 text-sm text-gray-200 transition-colors hover:text-white min-[1025px]:block ${
+                                showMenuDrawer ? "!inline-block" : ""
+                            }`}
+                        >
+                            Phim bộ
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            to="/cartoon"
+                            onClick={closeMenuDrawer}
+                            className={`hidden py-3 text-sm text-gray-200 transition-colors hover:text-white min-[1025px]:block ${
+                                showMenuDrawer ? "!inline-block" : ""
+                            }`}
+                        >
+                            Hoạt hình
+                        </Link>
+                    </li>
+                </ul>
+            </nav>
+
+            <div className="group relative ml-auto">
+                <button
+                    type="button"
+                    className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-white px-3 text-sm font-bold text-[#171a24] transition-colors hover:bg-gray-100 sm:h-11 min-[1025px]:px-4"
+                >
+                    <span className="relative">
+                        <img
+                            src={getAvatarUrl(avatar)}
+                            alt=""
+                            className="h-7 w-7 rounded-full object-cover"
+                        />
+                        {hasPaid && (
+                            <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-[#ffc83d]" />
+                        )}
+                    </span>
+                    <FontAwesomeIcon
+                        icon={faUser}
+                        className="hidden sm:block"
+                    />
+                    <span className="hidden max-w-[110px] truncate sm:block">
+                        {username || "Thành viên"}
+                    </span>
+                </button>
+                <div className="absolute right-0 top-14 hidden w-[300px] pt-5 group-hover:block">
+                    <div className="rounded-2xl border border-white/10 bg-[#111827] p-6 text-white shadow-2xl shadow-black/50">
                         <div className="flex items-center gap-3">
                             <img
                                 src={getAvatarUrl(avatar)}
                                 alt=""
-                                className="h-[60px] w-[60px] rounded-xl object-cover"
+                                className="h-[60px] w-[60px] rounded-2xl object-cover"
                             />
-                            <div>
-                                <p className="text-lg">{username}</p>
-                                <p>{email}</p>
+                            <div className="min-w-0">
+                                <p className="truncate text-lg">{username}</p>
+                                <p className="truncate text-sm text-gray-400">
+                                    {email}
+                                </p>
                             </div>
                         </div>
-                        <ul className="mt-8">
+                        <ul className="mt-6">
                             <li>
-                                <a
-                                    href={`/profile`}
-                                    className="inline-block py-2"
+                                <Link
+                                    to="/profile"
+                                    className="inline-block py-2 text-gray-200 hover:text-[#ffc83d]"
                                 >
                                     Trang cá nhân
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a
-                                    href="/favorite"
-                                    className="inline-block py-2"
+                                <Link
+                                    to="/favorite"
+                                    className="inline-block py-2 text-gray-200 hover:text-[#ffc83d]"
                                 >
                                     Danh sách yêu thích
-                                </a>
+                                </Link>
                             </li>
-                            <li className="mt-3 border-t border-solid border-t-[#292e39] pt-3">
-                                <a
-                                    href="#!"
-                                    className="inline-block py-2"
+                            <li className="mt-3 border-t border-solid border-t-white/10 pt-3">
+                                <button
+                                    type="button"
+                                    className="inline-block py-2 text-left text-gray-200 hover:text-[#ffc83d]"
                                     onClick={handleLogout}
                                 >
                                     Đăng xuất
-                                </a>
+                                </button>
                             </li>
                         </ul>
                     </div>
                 </div>
-                {hasPaid && (
-                    <img
-                        className="absolute -right-[6px] -top-[5px]"
-                        src="data:image/svg+xml,%3csvg%20width='10'%20height='11'%20viewBox='0%200%2010%2011'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M9.39379%209.23321C9.0651%209.45156%208.65127%209.35571%208.44241%209.04131C8.43292%209.02701%208.43292%209.02701%208.43292%209.02701L3.97587%2010.9373C3.74252%2011.0512%203.45241%2010.9555%203.31001%2010.7412L0.16768%206.01085C0.0252788%205.79648%200.0495717%205.49198%200.244949%205.321L3.73367%201.95298C3.73367%201.95298%203.73367%201.95298%203.72418%201.93869C3.51533%201.62429%203.58739%201.20567%203.91608%200.987317C4.23048%200.778461%204.6586%200.864817%204.86746%201.17922C5.06682%201.47933%204.98996%201.92174%204.67556%202.13059C4.54694%202.21604%204.39464%202.23482%204.24713%202.22982L4.07259%204.19953C4.05299%204.54211%204.3428%204.82333%204.68548%204.78107L6.87956%204.5182C6.87517%204.29455%206.97071%204.0663%207.18508%203.9239C7.49948%203.71504%207.9276%203.8014%208.14594%204.13009C8.3548%204.44449%208.25895%204.85832%207.94455%205.06718C7.73019%205.20958%207.48275%205.20917%207.26879%205.10413L6.17594%207.02475C6.00415%207.32425%206.16054%207.7147%206.48392%207.82944L8.35779%208.41781C8.41985%208.29419%208.5057%208.17537%208.63432%208.08993C8.94872%207.88107%209.36734%207.95314%209.58569%208.28183C9.79455%208.59623%209.70819%209.02435%209.39379%209.23321Z'%20fill='%23F5C70E'/%3e%3c/svg%3e"
-                    />
-                )}
             </div>
 
             <div

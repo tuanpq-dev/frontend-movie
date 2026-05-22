@@ -1,145 +1,151 @@
-import { StrictMode } from "react";
+import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { IntlProvider } from "react-intl";
 import Root from "./pages/Root.jsx";
-import HomePage from "./pages/HomePage.jsx";
-import MovieDetail from "@pages/MovieDetail";
-import Watch from "@pages/Watch";
-import SingleMovie from "@pages/SingleMovie";
-import TVSeries from "@pages/TVSeries";
-import SearchPage from "@pages/SearchPage";
-import SignIn from "@pages/SignIn";
-import SignUp from "@pages/SignUp";
-// import ManageMovie from "@pages/Admin/Movie/ManageMovie";
-import CreateMovie from "@pages/Admin/Movie/CreateMovie";
-import EditMovie from "@pages/Admin/Movie/EditMovie";
-import UserProfile from "@pages/UserProfile";
 import ModalProvider from "./context/ModalProvider";
 import { UserProvider } from "./context/UserContext";
 import Toast from "./components/Toast/Toast";
-import ManageComment from "@pages/Admin/ManageComment";
-import ManageUser from "@pages/Admin/User/ManageUser";
-import EditUser from "@pages/Admin/User/EditUser";
-import ManageGenre from "@pages/Admin/Genre/ManageGenre";
-import CreateGenre from "@pages/Admin/Genre/CreateGenre";
-import EditGenre from "@pages/Admin/Genre/EditGenre";
-import ManagePayment from "@pages/Admin/Payment/ManagePayment";
-import ManageRevenue from "@pages/Admin/Payment/ManageRevenue";
-import FavoriteList from "@pages/FavoriteList";
 import AdminRouter from "./AdminRouter";
 import AdminLayout from "@pages/Admin/AdminLayout";
-import VnPayReturn from "@pages/VNPayReturn";
-import ManageMovie2 from "@pages/Admin/Movie/ManageMovie2";
-import CartoonMovie from "@pages/CartoonMovie";
-import Forbidden from "@pages/Forbidden";
+import { RouteFallback } from "@components/Skeleton";
+
+const HomePage = lazy(() => import("./pages/HomePage.jsx"));
+const MovieDetail = lazy(() => import("@pages/MovieDetail"));
+const Watch = lazy(() => import("@pages/Watch"));
+const SingleMovie = lazy(() => import("@pages/SingleMovie"));
+const TVSeries = lazy(() => import("@pages/TVSeries"));
+const CartoonMovie = lazy(() => import("@pages/CartoonMovie"));
+const SearchPage = lazy(() => import("@pages/SearchPage"));
+const FavoriteList = lazy(() => import("@pages/FavoriteList"));
+const SignIn = lazy(() => import("@pages/SignIn"));
+const SignUp = lazy(() => import("@pages/SignUp"));
+const UserProfile = lazy(() => import("@pages/UserProfile"));
+const VnPayReturn = lazy(() => import("@pages/VNPayReturn"));
+const Forbidden = lazy(() => import("@pages/Forbidden"));
+const ManageMovie2 = lazy(() => import("@pages/Admin/Movie/ManageMovie2"));
+const CreateMovie = lazy(() => import("@pages/Admin/Movie/CreateMovie"));
+const EditMovie = lazy(() => import("@pages/Admin/Movie/EditMovie"));
+const ManageUser = lazy(() => import("@pages/Admin/User/ManageUser"));
+const EditUser = lazy(() => import("@pages/Admin/User/EditUser"));
+const ManageGenre = lazy(() => import("@pages/Admin/Genre/ManageGenre"));
+const CreateGenre = lazy(() => import("@pages/Admin/Genre/CreateGenre"));
+const EditGenre = lazy(() => import("@pages/Admin/Genre/EditGenre"));
+const ManagePayment = lazy(() => import("@pages/Admin/Payment/ManagePayment"));
+const ManageRevenue = lazy(() => import("@pages/Admin/Payment/ManageRevenue"));
+const ManageComment = lazy(() => import("@pages/Admin/ManageComment"));
+
+const withSuspense = (element) => (
+    <Suspense fallback={<RouteFallback />}>{element}</Suspense>
+);
+
 const router = createBrowserRouter([
     {
         element: <Root />,
         children: [
             {
                 path: "/",
-                element: <HomePage />,
+                element: withSuspense(<HomePage />),
             },
             {
                 path: "/info/:id",
-                element: <MovieDetail />,
+                element: withSuspense(<MovieDetail />),
             },
             {
                 path: "/watch/:id",
-                element: <Watch />,
+                element: withSuspense(<Watch />),
             },
             {
                 path: "/movie",
-                element: <SingleMovie />,
+                element: withSuspense(<SingleMovie />),
             },
             {
                 path: "/tv",
-                element: <TVSeries />,
+                element: withSuspense(<TVSeries />),
             },
             {
                 path: "/cartoon",
-                element: <CartoonMovie />,
+                element: withSuspense(<CartoonMovie />),
             },
             {
                 path: "/search",
-                element: <SearchPage />,
+                element: withSuspense(<SearchPage />),
             },
             {
                 path: "/favorite",
-                element: <FavoriteList />,
+                element: withSuspense(<FavoriteList />),
             },
         ],
     },
     {
         path: "/sign-in",
-        element: <SignIn />,
+        element: withSuspense(<SignIn />),
     },
     {
         path: "/sign-up",
-        element: <SignUp />,
+        element: withSuspense(<SignUp />),
     },
     {
         path: "/profile",
-        element: <UserProfile />,
+        element: withSuspense(<UserProfile />),
     },
     {
         element: <AdminRouter element={<AdminLayout />} />,
         children: [
             {
                 path: "/admin/movie",
-                element: <ManageMovie2 />,
+                element: withSuspense(<ManageMovie2 />),
             },
             {
                 path: "/admin/movie/create",
-                element: <CreateMovie />,
+                element: withSuspense(<CreateMovie />),
             },
             {
                 path: "/admin/movie/edit/:id",
-                element: <EditMovie />,
+                element: withSuspense(<EditMovie />),
             },
             {
                 path: "/admin/user",
-                element: <ManageUser />,
+                element: withSuspense(<ManageUser />),
             },
             {
                 path: "admin/user/edit/:id",
-                element: <EditUser />,
+                element: withSuspense(<EditUser />),
             },
             {
                 path: "/admin/genre",
-                element: <ManageGenre />,
+                element: withSuspense(<ManageGenre />),
             },
             {
                 path: "/admin/genre/create",
-                element: <CreateGenre />,
+                element: withSuspense(<CreateGenre />),
             },
             {
                 path: "/admin/genre/edit/:id",
-                element: <EditGenre />,
+                element: withSuspense(<EditGenre />),
             },
             {
                 path: "/admin/payment",
-                element: <ManagePayment />,
+                element: withSuspense(<ManagePayment />),
             },
             {
                 path: "/admin/revenue",
-                element: <ManageRevenue />,
+                element: withSuspense(<ManageRevenue />),
             },
             {
                 path: "/admin/comment",
-                element: <ManageComment />,
+                element: withSuspense(<ManageComment />),
             },
         ],
     },
     {
         path: "/VnPayReturn",
-        element: <VnPayReturn />,
+        element: withSuspense(<VnPayReturn />),
     },
     {
         path: "/403",
-        element: <Forbidden />,
+        element: withSuspense(<Forbidden />),
     },
 ]);
 

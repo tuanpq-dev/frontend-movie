@@ -20,6 +20,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
 import { API_URL } from "@libs/config";
+import { invalidateCache } from "@libs/requestCache";
 import dayjs from "dayjs";
 
 const { RangePicker } = DatePicker;
@@ -71,6 +72,7 @@ const ActionColumn = ({ record }) => {
                 },
             );
             message.success(`Đã cập nhật trạng thái thành "${statusText}"`);
+            invalidateCache("payment");
             reloadPage();
         } catch (error) {
             message.error("Lỗi khi cập nhật trạng thái thanh toán");

@@ -8,6 +8,7 @@ import Cookies from "js-cookie";
 import dayjs from "dayjs";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
 import { API_URL } from "@libs/config";
+import { invalidateCache } from "@libs/requestCache";
 
 const CommentActionContext = createContext({});
 
@@ -33,6 +34,7 @@ const ActionColumn = ({ record }) => {
                 },
             });
             message.success(`Đã xóa bình luận "${truncate(content, 40)}"`);
+            invalidateCache("comments");
             reloadPage();
         } catch (error) {
             message.error("Lỗi khi xóa bình luận");

@@ -1,3 +1,101 @@
 .react-multiple-carousel__arrow {
-    z-index: 1;
+    z-index: 2;
+    bottom: 64px;
+    top: auto;
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(10px);
+    transition:
+        background 180ms ease,
+        transform 180ms ease;
+}
+
+.react-multiple-carousel__arrow:hover {
+    background: rgba(255, 255, 255, 0.22);
+    transform: scale(1.04);
+}
+
+.react-multiple-carousel__arrow--left {
+    left: auto;
+    right: 112px;
+}
+
+.react-multiple-carousel__arrow--right {
+    right: 48px;
+}
+
+.feature-movie-carousel {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: #070b14;
+    overflow: hidden;
+    cursor: grab;
+    user-select: none;
+    touch-action: pan-y;
+}
+
+.feature-movie-carousel.is-grabbing,
+.feature-movie-carousel.is-dragging,
+.feature-movie-carousel:active {
+    cursor: grabbing;
+}
+
+.feature-movie-carousel__container {
+    overflow: hidden;
+}
+
+.feature-movie-carousel__track {
+    align-items: stretch;
+    transition: transform 560ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+}
+
+.feature-movie-carousel.is-dragging .feature-movie-carousel__track,
+.feature-movie-carousel.is-dragging .react-multi-carousel-track {
+    transition: none !important;
+}
+
+.feature-movie-carousel__item {
+    backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
+}
+
+.feature-movie-slide,
+.feature-movie-slide img {
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.feature-movie-slide a {
+    cursor: pointer;
+}
+
+@media (max-width: 576px) {
+    .react-multiple-carousel__arrow {
+        bottom: 28px;
+        min-width: 36px;
+        min-height: 36px;
+    }
+
+    .react-multiple-carousel__arrow--left {
+        right: 64px;
+    }
+
+    .react-multiple-carousel__arrow--right {
+        right: 16px;
+    }
+}
+
+@media (min-width: 577px) and (max-width: 1024px) {
+    .react-multiple-carousel__arrow {
+        bottom: 48px;
+    }
+
+    .react-multiple-carousel__arrow--left {
+        right: 96px;
+    }
+
+    .react-multiple-carousel__arrow--right {
+        right: 36px;
+    }
 }

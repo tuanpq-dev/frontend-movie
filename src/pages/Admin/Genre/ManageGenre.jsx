@@ -9,6 +9,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
 import { API_URL } from "@libs/config";
+import { invalidateCache } from "@libs/requestCache";
 import GenreForm from "./components/GenreForm";
 
 // Create context for modal actions
@@ -28,6 +29,8 @@ const ActionColumn = ({ record }) => {
                 },
             });
             message.success(`Đã xóa thể loại "${name}"`);
+            invalidateCache("genres");
+            invalidateCache("movies");
             reloadPage();
         } catch (error) {
             message.error("Lỗi khi xóa thể loại");

@@ -4,12 +4,14 @@ import { Button, Space, Popconfirm, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faEye } from "@fortawesome/free-solid-svg-icons";
-import { useState, createContext, useContext, useEffect } from "react";
+import { useState, createContext, useContext, useMemo } from "react";
 
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
 import { API_URL } from "@libs/config";
+import { invalidateCache } from "@libs/requestCache";
+import { useGenres } from "@/hooks/useMovieData";
 import MovieForm from "./components/MovieForm";
 
 // Create context for modal actions
@@ -31,6 +33,7 @@ const ActionColumn = ({ record }) => {
                 },
             });
             message.success(`Đã xóa phim "${name}"`);
+            invalidateCache("movies");
             reloadPage();
         } catch (error) {
             message.error("Lỗi khi xóa phim");
@@ -80,21 +83,12 @@ const ManageMovie2 = () => {
     const [thumbPreview, setThumbPreview] = useState("/img-placeholder.jpg");
     const [posterFile, setPosterFile] = useState(null);
     const [thumbFile, setThumbFile] = useState(null);
-    const [genresList, setGenresList] = useState([]);
     const token = Cookies.get("accessToken");
-
-    // Fetch genres list
-    useEffect(() => {
-        const fetchGenres = async () => {
-            try {
-                const response = await axios.get(`${API_URL}/api/genres`);
-                setGenresList(response.data);
-            } catch (error) {
-                console.error("Error fetching genres:", error);
-            }
-        };
-        fetchGenres();
-    }, []);
+    const { data: genresData = [] } = useGenres();
+    const genresList = useMemo(
+        () => (Array.isArray(genresData) ? genresData : []),
+        [genresData],
+    );
 
     const openEditModal = (movie) => {
         setEditingMovie(movie);

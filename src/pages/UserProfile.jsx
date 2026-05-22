@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import Cookies from "js-cookie";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ChangePasswordModal from "@components/ChangePasswordModal";
 import { API_URL, getAvatarUrl } from "@libs/config";
 import { useUserContext } from "@context/UserContext";
@@ -143,24 +143,24 @@ const UserProfile = () => {
                             </p>
                         </div>
                         <div className="ml-auto flex flex-wrap gap-5">
-                            <a
+                            <button
+                                type="button"
                                 onClick={handleLogout}
-                                href="#!"
                                 className="flex h-12 items-center gap-2 rounded-full border border-solid border-[#384d6c] bg-white px-10 text-[#384d6c]"
                             >
                                 <span className="font-medium">Đăng xuất</span>
                                 <FontAwesomeIcon
                                     icon={faArrowRightFromBracket}
                                 />
-                            </a>
-                            <a
-                                href="/"
+                            </button>
+                            <Link
+                                to="/"
                                 className="flex h-12 items-center rounded-lg bg-[#384d6c] px-10 text-white"
                             >
                                 <span className="font-medium">
                                     Về trang chủ
                                 </span>
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 </section>

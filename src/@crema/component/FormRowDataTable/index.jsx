@@ -4,6 +4,7 @@ import { Modal, Form, Button, message } from "antd";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { invalidateCache } from "@libs/requestCache";
 
 const FORM_CONFIG = {
     create: {
@@ -20,6 +21,15 @@ const FORM_CONFIG = {
         title: "Xem chi tiết",
         buttonText: null,
     },
+};
+
+const invalidateResourceCache = (resource = "") => {
+    if (resource.includes("/api/movies")) invalidateCache("movies");
+    if (resource.includes("/api/genres")) invalidateCache("genres");
+    if (resource.includes("/api/users")) invalidateCache("users");
+    if (resource.includes("/api/comments")) invalidateCache("comments");
+    if (resource.includes("/api/payment")) invalidateCache("payment");
+    if (resource.includes("/api/favoriteMovies")) invalidateCache("favorite");
 };
 
 const FormRowDataTable = ({
@@ -91,6 +101,7 @@ const FormRowDataTable = ({
             }
 
             message.success(config.successMessage);
+            invalidateResourceCache(resource);
 
             if (reloadPage) {
                 reloadPage();

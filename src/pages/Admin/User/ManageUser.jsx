@@ -9,6 +9,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useDataTableContext } from "src/@crema/core/DataTable/DataTableContext";
 import { API_URL, getAvatarUrl } from "@libs/config";
+import { invalidateCache } from "@libs/requestCache";
 import UserForm from "./components/UserForm";
 
 const DEFAULT_AVATAR =
@@ -48,6 +49,7 @@ const ActionColumn = ({ record }) => {
                 },
             });
             message.success(`Đã xóa người dùng "${name}"`);
+            invalidateCache("users");
             reloadPage();
         } catch (error) {
             message.error("Lỗi khi xóa người dùng");

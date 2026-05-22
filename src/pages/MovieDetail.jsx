@@ -2,56 +2,55 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { faFilm, faPlay } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Spinner from "@/components/Spinner";
 import CircularProgressBar from "@components/CircularProgressBar";
+import { DetailSkeleton } from "@components/Skeleton";
 import { useModalContext } from "@context/ModalProvider";
 import { useUserContext } from "@context/UserContext";
 import Comments from "@components/Comments";
-import axios from "axios";
-import Toast from "@components/Toast/Toast";
 import { showSuccessToast } from "@components/Toast/Toast";
 import PaymentModal from "@components/PaymentModal";
 import { API_URL } from "@libs/config";
+import { apiClient } from "@libs/apiClient";
+import { invalidateCache } from "@libs/requestCache";
+import { useMovie, usePaymentStatus } from "@/hooks/useMovieData";
+import Cookies from "js-cookie";
 
 const MovieDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [movieInfo, setMovieInfo] = useState(null);
-    const [isLoadingMovie, setIsLoadingMovie] = useState(true);
     const [isLoadingPayment, setIsLoadingPayment] = useState(false);
     const [isShowModal, setIsShowModal] = useState(false);
 
     const { id: userId, isAdmin } = useUserContext();
     const { handlePlayTrailer } = useModalContext();
+    const {
+        data: movieInfo,
+        loading: isLoadingMovie,
+        error: movieError,
+    } = useMovie(id);
+    const { data: paymentStatus } = usePaymentStatus(userId, {
+        enabled: Boolean(userId && !isAdmin),
+        staleTime: 30 * 1000,
+    });
 
-    // Fetch movie data
-    useEffect(() => {
-        const fetchMovie = async () => {
-            setIsLoadingMovie(true);
-            try {
-                const response = await axios.get(`${API_URL}/api/movies/${id}`);
-                setMovieInfo(response.data);
-            } catch (error) {
-                console.error("Lỗi khi lấy dữ liệu phim:", error);
-            } finally {
-                setIsLoadingMovie(false);
-            }
-        };
-        fetchMovie();
-    }, [id]);
-    // Get auth token from cookie
-    const token = useMemo(() => {
-        try {
-            const authCookie = document.cookie
-                .split("; ")
-                .find((row) => row.startsWith("accessToken="));
-            return authCookie ? authCookie.split("=")[1] : null;
-        } catch {
-            return null;
-        }
+    const showPaymentModal = useCallback(() => {
+        document.documentElement.style.overflow = "hidden";
+        setIsShowModal(true);
     }, []);
 
-    // Handle add to favorites
+    const hidePaymentModal = useCallback(() => {
+        document.documentElement.style.overflow = "auto";
+        setIsShowModal(false);
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            document.documentElement.style.overflow = "auto";
+        };
+    }, []);
+
+    const token = Cookies.get("accessToken");
+
     const handleAddFavoriteMovie = useCallback(async () => {
         if (!userId || !token) {
             showSuccessToast("Thông báo", "Vui lòng đăng nhập để tiếp tục");
@@ -59,22 +58,12 @@ const MovieDetail = () => {
         }
 
         try {
-            const response = await axios.post(
-                `${API_URL}/api/favoriteMovies`,
-                { movieIds: [id] },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                },
+            await apiClient.post("/api/favoriteMovies", { movieIds: [id] });
+            invalidateCache("favorite");
+            showSuccessToast(
+                "Thành công",
+                "Bạn đã thêm phim vào danh sách yêu thích",
             );
-
-            if (response.status === 201 || response.status === 200) {
-                showSuccessToast(
-                    "Thành công",
-                    "Bạn đã thêm phim vào danh sách yêu thích",
-                );
-            }
         } catch (error) {
             console.error("Lỗi khi thêm phim vào danh sách yêu thích:", error);
             const status = error.response?.status;
@@ -95,22 +84,24 @@ const MovieDetail = () => {
         }
     }, [userId, token, id]);
 
-    // Handle watch movie
     const handleWatchMovie = useCallback(async () => {
         if (!movieInfo?._id) return;
 
-        // Admin can watch directly
         if (isAdmin) {
             navigate(`/watch/${movieInfo._id}`);
             return;
         }
 
-        // Check payment status for regular users
         try {
-            const response = await axios.get(
-                `${API_URL}/api/payment/payment-status/${userId}`,
-            );
-            if (response.data.paid) {
+            const status =
+                paymentStatus ||
+                (userId
+                    ? await apiClient.get(
+                          `/api/payment/payment-status/${userId}`,
+                      )
+                    : null);
+
+            if (status?.paid) {
                 navigate(`/watch/${movieInfo._id}`);
             } else {
                 showPaymentModal();
@@ -119,9 +110,15 @@ const MovieDetail = () => {
             console.error("Lỗi khi kiểm tra thanh toán:", error);
             showPaymentModal();
         }
-    }, [userId, movieInfo?._id, isAdmin, navigate]);
+    }, [
+        userId,
+        movieInfo?._id,
+        isAdmin,
+        navigate,
+        paymentStatus,
+        showPaymentModal,
+    ]);
 
-    // Handle payment
     const handlePayment = useCallback(async () => {
         if (!userId) {
             showSuccessToast("Thông báo", "Vui lòng đăng nhập!");
@@ -130,25 +127,23 @@ const MovieDetail = () => {
 
         setIsLoadingPayment(true);
         try {
-            const { data } = await axios.post(
-                `${API_URL}/api/payment/create_payment`,
-                { userId },
-            );
+            const data = await apiClient.post("/api/payment/create_payment", {
+                userId,
+            });
 
             window.open(data.paymentUrl, "_blank");
 
-            // Listen for payment success from VNPay return tab
             const onPaymentSuccess = (e) => {
                 if (e.key === "paymentSuccess") {
                     localStorage.removeItem("paymentSuccess");
                     window.removeEventListener("storage", onPaymentSuccess);
+                    invalidateCache(`payment:status:${userId}`);
                     navigate(`/watch/${movieInfo._id}`);
                 }
             };
 
             window.addEventListener("storage", onPaymentSuccess);
 
-            // Cleanup listener after 10 minutes
             setTimeout(() => {
                 window.removeEventListener("storage", onPaymentSuccess);
             }, 600000);
@@ -160,51 +155,25 @@ const MovieDetail = () => {
         }
     }, [userId, movieInfo?._id, navigate]);
 
-    // Modal controls
-    const showPaymentModal = useCallback(() => {
-        document.documentElement.style.overflow = "hidden";
-        setIsShowModal(true);
-    }, []);
-
-    const hidePaymentModal = useCallback(() => {
-        document.documentElement.style.overflow = "auto";
-        setIsShowModal(false);
-    }, []);
-
-    // Cleanup overflow on unmount
-    useEffect(() => {
-        return () => {
-            document.documentElement.style.overflow = "auto";
-        };
-    }, []);
-
-    // Helper function for image URL
-    const getImageUrl = useCallback((url, type = "thumb") => {
+    const getImageUrl = useCallback((url) => {
         if (!url) return "/img-placeholder.jpg";
         if (url.startsWith("http")) return url;
         return `${API_URL}/images/movies/${url}`;
     }, []);
 
-    // Memoized genres display
     const genresText = useMemo(() => {
         return (movieInfo?.genres || [])
             .map((genre) => genre.nameGenre)
             .join(", ");
     }, [movieInfo?.genres]);
 
-    // Don't render until movie data is loaded
-    if (isLoadingMovie) {
-        return (
-            <div className="min-h-[40vh] bg-[#06121d] px-5 py-3 lg:py-5">
-                <Spinner />
-            </div>
-        );
+    if (isLoadingMovie && !movieInfo) {
+        return <DetailSkeleton />;
     }
 
-    // Don't render if no movie data
-    if (!movieInfo) {
+    if (!movieInfo || movieError) {
         return (
-            <div className="min-h-[40vh] bg-[#06121d] px-5 py-3 lg:py-5">
+            <div className="page-surface px-5 py-3 lg:py-5">
                 <div className="mx-auto max-w-screen-xl text-center text-white">
                     <p>Không tìm thấy phim</p>
                 </div>
@@ -213,34 +182,34 @@ const MovieDetail = () => {
     }
 
     return (
-        <div className="min-h-[40vh] bg-[#06121d] px-5 py-3 lg:py-5">
+        <div className="page-surface overflow-x-hidden px-3 py-3 sm:px-5 min-[1025px]:py-5">
             <div className="mx-auto max-w-screen-xl">
-                {/* Hero Section */}
                 <div className="relative py-3">
-                    <figure className="h-[480px] lg:h-[450px]">
+                    <figure className="h-[380px] overflow-hidden rounded-md sm:h-[430px] min-[1025px]:h-[450px]">
                         <img
                             src={getImageUrl(movieInfo.thumbUrl)}
                             alt={movieInfo.originName}
                             width={1280}
                             height={450}
                             loading="eager"
+                            decoding="async"
                             className="h-full w-full object-cover brightness-50"
                         />
                     </figure>
-                    <figure className="absolute left-5 top-5 h-[285px] w-[200px]">
+                    <figure className="absolute left-4 top-4 hidden h-[220px] w-[154px] overflow-hidden rounded-sm sm:block md:h-[260px] md:w-[182px] min-[1025px]:left-5 min-[1025px]:top-5 min-[1025px]:h-[285px] min-[1025px]:w-[200px]">
                         <img
-                            src={getImageUrl(movieInfo.posterUrl, "poster")}
+                            src={getImageUrl(movieInfo.posterUrl)}
                             alt={`${movieInfo.originName} poster`}
                             width={200}
                             height={285}
                             loading="eager"
+                            decoding="async"
                             className="h-full w-full object-cover"
                         />
                     </figure>
 
-                    {/* Movie Info Overlay */}
-                    <div className="absolute bottom-5 left-5 sm:bottom-6 md:bottom-7 lg:bottom-9">
-                        <div className="flex items-center gap-[10px]">
+                    <div className="absolute inset-x-4 bottom-4 sm:bottom-6 sm:left-5 sm:right-5 md:bottom-7 min-[1025px]:bottom-9">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-[10px]">
                             {movieInfo.voteAverage > 0 && (
                                 <div className="flex items-center gap-1">
                                     <CircularProgressBar
@@ -257,7 +226,7 @@ const MovieDetail = () => {
                                     .map((genre) => (
                                         <li
                                             key={genre._id}
-                                            className="rounded-lg bg-white p-[6px] text-sm font-medium text-black"
+                                            className="rounded-lg bg-white px-2 py-1 text-xs font-medium text-black sm:p-[6px] sm:text-sm"
                                         >
                                             {genre.nameGenre}
                                         </li>
@@ -265,10 +234,9 @@ const MovieDetail = () => {
                             </ul>
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="left-5 mt-2 flex flex-wrap items-center gap-2 sm:mt-3">
                             <button
-                                className="flex h-10 items-center justify-center gap-2 rounded-full bg-black px-3 font-medium text-white transition-colors hover:bg-gray-800"
+                                className="flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full bg-black px-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 min-[420px]:flex-none sm:min-h-11 sm:text-base"
                                 onClick={() =>
                                     handlePlayTrailer(movieInfo?.trailerKey)
                                 }
@@ -279,7 +247,7 @@ const MovieDetail = () => {
                             </button>
                             <button
                                 onClick={handleWatchMovie}
-                                className="flex h-10 items-center justify-center gap-2 rounded-full bg-[#ffb700] px-5 font-medium text-[#171c28] transition-colors hover:bg-[#e6a600]"
+                                className="flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full bg-[#ffb700] px-4 text-sm font-medium text-[#171c28] transition-colors hover:bg-[#e6a600] min-[420px]:flex-none sm:min-h-11 sm:px-5 sm:text-base"
                                 aria-label="Xem phim ngay"
                             >
                                 <FontAwesomeIcon
@@ -289,7 +257,7 @@ const MovieDetail = () => {
                                 Xem ngay
                             </button>
                             <button
-                                className="flex h-10 items-center justify-center gap-2 rounded-full bg-[#ff0000] px-5 text-base text-white transition-colors hover:bg-[#cc0000]"
+                                className="flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-[#ff0000] px-4 text-sm text-white transition-colors hover:bg-[#cc0000] min-[520px]:w-auto sm:min-h-11 sm:px-5 sm:text-base"
                                 onClick={handleAddFavoriteMovie}
                                 aria-label="Thêm vào yêu thích"
                             >
@@ -300,33 +268,12 @@ const MovieDetail = () => {
                                 />
                                 Thêm vào yêu thích
                             </button>
-                            {/* {userId && (
-                                <>
-                                    <button
-                                        onClick={handleWatchMovie}
-                                        className="flex h-10 items-center justify-center gap-2 rounded-full bg-[#ffb700] px-5 font-medium text-[#171c28] hover:bg-[#e6a600] transition-colors"
-                                        aria-label="Xem phim ngay"
-                                    >
-                                        <FontAwesomeIcon icon={faPlay} className="text-white" />
-                                        Xem ngay
-                                    </button>
-                                    <button
-                                        className="flex h-10 items-center justify-center gap-2 rounded-full bg-[#ff0000] px-5 text-base text-white hover:bg-[#cc0000] transition-colors"
-                                        onClick={handleAddFavoriteMovie}
-                                        aria-label="Thêm vào yêu thích"
-                                    >
-                                        <img src="/heart.svg" alt="" className="invert" />
-                                        Thêm vào yêu thích
-                                    </button>
-                                </>
-                            )} */}
                         </div>
                     </div>
                 </div>
 
-                {/* Movie Details */}
-                <div className="mt-3 space-y-2 text-base text-white lg:text-lg">
-                    <h1 className="text-3xl font-bold lg:text-4xl">
+                <div className="mt-3 min-w-0 space-y-2 break-words text-sm leading-6 text-white sm:text-base min-[1025px]:text-lg">
+                    <h1 className="text-2xl font-bold leading-tight sm:text-3xl min-[1025px]:text-4xl">
                         {movieInfo.originName}
                     </h1>
                     {movieInfo.time && (
@@ -367,14 +314,10 @@ const MovieDetail = () => {
                     )}
                 </div>
 
-                {/* Comments Section */}
                 {movieInfo._id && (
                     <Comments movieId={movieInfo._id} userId={userId} />
                 )}
 
-                <Toast />
-
-                {/* Payment Modal */}
                 {isShowModal && (
                     <PaymentModal
                         isLoading={isLoadingPayment}

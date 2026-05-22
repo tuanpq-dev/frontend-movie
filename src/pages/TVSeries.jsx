@@ -1,32 +1,24 @@
 import MediaList from "@components/MediaList";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { API_URL } from "@libs/config";
+import { useMemo } from "react";
+import { MovieGridSkeleton } from "@components/Skeleton";
+import { useMovies } from "@/hooks/useMovieData";
 
 const TVSeries = () => {
-    const [movies, setMovies] = useState([]);
-    const [filteredMovieSeries, setFilteredMovieSeries] = useState([]);
-    useEffect(() => {
-        const fetchMovies = async () => {
-            try {
-                // Gửi yêu cầu để lấy toàn bộ danh sách phim
-                const response = await axios.get(`${API_URL}/api/movies`);
-                setMovies(response.data); // Lưu toàn bộ danh sách phim
-            } catch (error) {
-                console.error("Error fetching movies:", error);
-            }
-        };
-
-        fetchMovies(); // Gọi hàm để lấy dữ liệu khi component mount
-    }, []);
-    useEffect(() => {
-        const fillterSeries = movies.filter((movie) => movie.type === "series");
-        setFilteredMovieSeries(fillterSeries);
+    const { data: movies = [], loading } = useMovies();
+    const filteredMovieSeries = useMemo(() => {
+        const movieList = Array.isArray(movies) ? movies : [];
+        return movieList.filter((movie) => movie.type === "series");
     }, [movies]);
+
     return (
-        <div className="min-h-screen bg-[#292e39]">
-            <MediaList movies={filteredMovieSeries} title={`Phim bộ`} />
+        <div className="page-surface">
+            {loading && filteredMovieSeries.length === 0 ? (
+                <MovieGridSkeleton />
+            ) : (
+                <MediaList movies={filteredMovieSeries} title="Phim bộ" />
+            )}
         </div>
     );
 };
+
 export default TVSeries;

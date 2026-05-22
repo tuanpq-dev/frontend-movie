@@ -1,46 +1,47 @@
 import FeatureMovies from "../components/FeatureMovies";
 import MediaList from "@components/MediaList";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { API_URL } from "@libs/config";
+import { useMemo } from "react";
+import { MovieGridSkeleton } from "@components/Skeleton";
+import { useMovies } from "@/hooks/useMovieData";
 
 function HomePage() {
-    const [movies, setMovies] = useState([]);
-    const [filteredMovieSingles, setFilteredMovieSingles] = useState([]);
-    const [filteredMovieSeries, setFilteredMovieSeries] = useState([]);
-    const [filteredMovieCartoon, setFilteredMovieCartoon] = useState([]);
+    const { data: movies = [], loading } = useMovies();
 
-    useEffect(() => {
-        const fetchMovies = async () => {
-            try {
-                const response = await axios.get(`${API_URL}/api/movies`);
-                setMovies(response?.data);
-            } catch (error) {
-                console.error("Error fetching movies:", error);
-            }
+    const filteredMovies = useMemo(() => {
+        const movieList = Array.isArray(movies) ? movies : [];
+        return {
+            singles: movieList.filter((movie) => movie.type === "single"),
+            series: movieList.filter((movie) => movie.type === "series"),
+            cartoons: movieList.filter((movie) =>
+                movie.genres?.some((gen) => gen?.nameGenre === "Hoạt hình"),
+            ),
         };
+    }, [movies]);
 
-        fetchMovies();
-    }, [JSON.stringify(movies)]);
-    useEffect(() => {
-        const filterSingle = movies.filter((movie) => movie.type === "single");
-        setFilteredMovieSingles(filterSingle);
-        const fillterSeries = movies.filter((movie) => movie.type === "series");
-        setFilteredMovieSeries(fillterSeries);
-        const fillterCartoon = movies.filter((movie) =>
-            movie.genres.some((gen) => gen?.nameGenre === "Hoạt hình"),
-        );
-        setFilteredMovieCartoon(fillterCartoon);
-    }, [JSON.stringify(movies)]);
     return (
-        <div>
-            <FeatureMovies />
-            <MediaList movies={filteredMovieSingles} title={`Phim lẻ đề cử`} />
-            <MediaList movies={filteredMovieSeries} title={`Phim bộ đề cử`} />
-            <MediaList
-                movies={filteredMovieCartoon}
-                title={`Phim hoạt hình cử`}
-            />
+        <div className="page-surface">
+            <FeatureMovies movies={movies} loading={loading} />
+            {loading && movies.length === 0 ? (
+                <>
+                    <MovieGridSkeleton />
+                    <MovieGridSkeleton />
+                </>
+            ) : (
+                <>
+                    <MediaList
+                        movies={filteredMovies.singles}
+                        title="Phim lẻ đề cử"
+                    />
+                    <MediaList
+                        movies={filteredMovies.series}
+                        title="Phim bộ đề cử"
+                    />
+                    <MediaList
+                        movies={filteredMovies.cartoons}
+                        title="Phim hoạt hình đề cử"
+                    />
+                </>
+            )}
         </div>
     );
 }

@@ -1,6 +1,39 @@
+import { memo } from "react";
 import CommentForm from "./CommentForm";
 
-const Comment = ({
+const getUserId = (user) =>
+    typeof user === "string" ? user : user?._id || user?.id || "";
+
+const getCommentText = (comment) =>
+    comment?.content || comment?.contentReplies || "";
+
+const timeAgo = (createdAt) => {
+    if (!createdAt) return "";
+
+    const now = new Date();
+    const past = new Date(createdAt);
+    const diffInSeconds = Math.max(Math.floor((now - past) / 1000), 0);
+
+    const intervals = [
+        { label: "năm", seconds: 31536000 },
+        { label: "tháng", seconds: 2592000 },
+        { label: "ngày", seconds: 86400 },
+        { label: "giờ", seconds: 3600 },
+        { label: "phút", seconds: 60 },
+        { label: "giây", seconds: 1 },
+    ];
+
+    for (const interval of intervals) {
+        const count = Math.floor(diffInSeconds / interval.seconds);
+        if (count >= 1) {
+            return `${count} ${interval.label} trước`;
+        }
+    }
+
+    return "Vừa xong";
+};
+
+const Comment = memo(function Comment({
     comment,
     activeComment,
     setActiveComment,
@@ -9,141 +42,134 @@ const Comment = ({
     updateComment,
     deleteComment,
     currentUserId,
+    submittingTarget,
     parentId = null,
-}) => {
+    parentCreatedAt = null,
+}) {
+    const commentId = comment?._id || comment?.id;
+    const commentUserId = getUserId(comment?.userId);
+    const commentText = getCommentText(comment);
+    const isReply = Boolean(parentId);
     const isReplying =
-        activeComment?.id &&
-        activeComment.id === comment._id &&
-        activeComment.type === "replying";
+        activeComment?.id === commentId && activeComment.type === "replying";
     const isEditing =
-        activeComment?.id &&
-        activeComment.id === comment._id &&
-        activeComment.type === "editing";
-    const canReply = !!currentUserId;
+        activeComment?.id === commentId && activeComment.type === "editing";
+    const canReply = Boolean(currentUserId) && !isReply;
     const canEdit =
-        currentUserId === comment.userId && comment?.replies?.length === 0;
+        currentUserId === commentUserId &&
+        (comment?.replies?.length || 0) === 0;
     const canDelete =
-        currentUserId === comment.userId && comment?.replies?.length === 0;
-
-    function timeAgo(createdAt) {
-        const now = new Date();
-        const past = new Date(createdAt);
-        const diffInSeconds = Math.floor((now - past) / 1000);
-
-        const intervals = [
-            { label: "năm", seconds: 31536000 },
-            { label: "tháng", seconds: 2592000 },
-            { label: "ngày", seconds: 86400 },
-            { label: "giờ", seconds: 3600 },
-            { label: "phút", seconds: 60 },
-            { label: "giây", seconds: 1 },
-        ];
-
-        for (const interval of intervals) {
-            const count = Math.floor(diffInSeconds / interval.seconds);
-            if (count >= 1) {
-                return count === 1
-                    ? `1 ${interval.label} trước`
-                    : `${count} ${interval.label} trước`;
-            }
-        }
-        return "Vừa xong";
-    }
+        currentUserId === commentUserId &&
+        (comment?.replies?.length || 0) === 0;
+    const displayName =
+        comment?.username || comment?.userId?.username || "Người dùng";
+    const initials = displayName.slice(0, 2).toUpperCase();
+    const displayTime = isReply
+        ? comment?.createdAt || comment?.updatedAt || parentCreatedAt
+        : comment?.createdAt || comment?.updatedAt;
 
     return (
-        <div className="mb-6 flex gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-[50%] bg-[#fd7e97] text-white">
-                {comment?.username.slice(0, 2).toUpperCase()}
+        <article
+            className={`flex gap-3 rounded-2xl transition-colors ${
+                isReply
+                    ? "border-l border-white/10 py-2.5 pl-2.5 sm:ml-6 sm:pl-4 min-[1025px]:ml-8"
+                    : "bg-[#171c28] p-3.5 sm:p-4"
+            }`}
+        >
+            <div
+                className={`flex shrink-0 items-center justify-center rounded-full bg-[#fd7e97] font-semibold text-white ${
+                    isReply ? "h-8 w-8 text-xs" : "h-10 w-10 text-sm"
+                }`}
+            >
+                {initials}
             </div>
-            <div className="flex-1">
-                <div className="flex items-center gap-2">
-                    <p className="text-lg font-medium">{comment.username}</p>
-                    {/* <p>
-                        {new Date(comment.createdAt).toLocaleDateString(
-                            "vi-VN",
-                            {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                            },
-                        )}{" "}
-                        {new Date(comment.createdAt).toLocaleTimeString(
-                            "vi-VN",
-                            {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            },
-                        )}
-                    </p> */}
-                    <p>{timeAgo(comment.createdAt)}</p>
+            <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <p className="text-sm font-semibold text-white sm:text-base">
+                        {displayName}
+                    </p>
+                    {timeAgo(displayTime) && (
+                        <p className="text-[11px] text-gray-500 sm:text-xs">
+                            {timeAgo(displayTime)}
+                        </p>
+                    )}
                 </div>
-                {!isEditing && <p className="mt-1">{comment.content}</p>}
+
+                {!isEditing && (
+                    <p className="mt-1 break-words text-sm leading-6 text-gray-100">
+                        {commentText}
+                    </p>
+                )}
+
                 {isEditing && (
                     <CommentForm
                         submitLabel="Cập nhật"
                         hasCancelButton
-                        initialText={comment.content}
-                        handleSubmit={(text) =>
-                            updateComment(text, comment._id)
-                        }
+                        initialText={commentText}
+                        handleSubmit={(text) => updateComment(text, commentId)}
                         handleCancel={() => setActiveComment(null)}
                     />
                 )}
-                <div className="flex gap-1">
+
+                <div className="mt-2 flex flex-wrap gap-1.5">
                     {canReply && (
-                        <p
-                            className="mt-1 cursor-pointer px-1 text-[#0071dc] hover:underline"
+                        <button
+                            type="button"
+                            className="rounded-full px-2.5 py-1 text-xs font-semibold text-[#ffcf45] transition-colors hover:bg-white/5"
                             onClick={() =>
                                 setActiveComment({
-                                    id: comment._id,
+                                    id: commentId,
                                     type: "replying",
                                 })
                             }
                         >
                             Trả lời
-                        </p>
+                        </button>
                     )}
                     {canEdit && (
-                        <p
-                            className="mt-1 cursor-pointer px-1 text-[#0071dc] hover:underline"
+                        <button
+                            type="button"
+                            className="rounded-full px-2.5 py-1 text-xs font-semibold text-[#4ea1ff] transition-colors hover:bg-white/5"
                             onClick={() =>
                                 setActiveComment({
-                                    id: comment._id,
+                                    id: commentId,
                                     type: "editing",
                                 })
                             }
                         >
                             Sửa
-                        </p>
+                        </button>
                     )}
                     {canDelete && (
-                        <p
-                            className="mt-1 cursor-pointer px-1 text-[#0071dc] hover:underline"
+                        <button
+                            type="button"
+                            className="rounded-full px-2.5 py-1 text-xs font-semibold text-[#ff6b7d] transition-colors hover:bg-white/5"
                             onClick={() =>
-                                deleteComment(comment._id, comment.content)
+                                deleteComment(commentId, commentText)
                             }
                         >
                             Xóa
-                        </p>
+                        </button>
                     )}
                 </div>
 
                 {isReplying && (
-                    <CommentForm
-                        handleSubmit={(text) =>
-                            addComment(text, parentId ? parentId : comment._id)
-                        }
-                        submitLabel="Bình luận"
-                        handleCancel={() => setActiveComment(null)}
-                    />
+                    <div className="mt-3 rounded-xl bg-white/[0.03] p-3">
+                        <CommentForm
+                            handleSubmit={(text) => addComment(text, commentId)}
+                            submitLabel="Bình luận"
+                            handleCancel={() => setActiveComment(null)}
+                            isSubmitting={submittingTarget === commentId}
+                            className="mt-0"
+                        />
+                    </div>
                 )}
 
-                {/* Replies */}
-                {replies && (
-                    <div className="mt-5">
+                {Array.isArray(replies) && replies.length > 0 && (
+                    <div className="mt-3 space-y-1.5">
                         {replies.map((reply) => (
                             <Comment
-                                key={reply._id}
+                                key={reply._id || reply.id}
                                 comment={reply}
                                 activeComment={activeComment}
                                 setActiveComment={setActiveComment}
@@ -152,13 +178,16 @@ const Comment = ({
                                 updateComment={updateComment}
                                 deleteComment={deleteComment}
                                 currentUserId={currentUserId}
-                                parentId={comment._id}
+                                submittingTarget={submittingTarget}
+                                parentId={commentId}
+                                parentCreatedAt={comment?.createdAt}
                             />
                         ))}
                     </div>
                 )}
             </div>
-        </div>
+        </article>
     );
-};
+});
+
 export default Comment;

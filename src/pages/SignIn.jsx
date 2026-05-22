@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { validateEmail } from "../libs/utils/emailValidator";
 import { showSuccessToast, showErrorToast } from "../components/Toast/Toast";
 import { API_URL } from "../libs/config";
@@ -165,12 +165,12 @@ const SignIn = () => {
             <div className="mx-auto w-content-inner px-5 py-20 lg:py-40">
                 <div className="flex flex-col items-center">
                     <h1>
-                        <a
-                            href="/"
+                        <Link
+                            to="/"
                             className="text-3xl font-bold uppercase text-red-500"
                         >
                             Mọt phim
-                        </a>
+                        </Link>
                     </h1>
 
                     <h2 className="mt-10 text-3xl">Đăng nhập</h2>
@@ -226,12 +226,12 @@ const SignIn = () => {
 
                     <p className="mt-7 flex gap-1">
                         Chưa có tài khoản?
-                        <a
-                            href="/sign-up"
+                        <Link
+                            to="/sign-up"
                             className="font-medium text-[#0166ff]"
                         >
                             Đăng ký ngay
-                        </a>
+                        </Link>
                     </p>
                 </div>
             </div>
