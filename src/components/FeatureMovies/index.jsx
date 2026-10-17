@@ -11,7 +11,7 @@ const FeatureMovies = ({ movies = [], loading = false }) => {
     }
 
     return (
-        <div className="bg-[#292e39]">
+        <div className="bg-surface">
             <div className="relative block overflow-hidden text-white">
                 <Movie movies={movies} />
             </div>

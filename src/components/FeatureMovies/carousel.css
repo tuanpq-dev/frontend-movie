@@ -26,7 +26,7 @@
 
 .feature-movie-carousel {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: #070b14;
+    background: theme("colors.surface.DEFAULT");
     overflow: hidden;
     cursor: grab;
     user-select: none;

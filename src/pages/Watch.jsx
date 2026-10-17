@@ -1,151 +1,183 @@
 import Hls from "hls.js";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { DetailSkeleton } from "@components/Skeleton";
-import { useMovie } from "@/hooks/useMovieData";
+import EpisodeList from "@components/EpisodeList";
+import { useKKMovie } from "@/hooks/useMovieData";
 
-const Watch = () => {
-    const { id } = useParams();
+// Phát m3u8 bằng hls.js; lỗi nghiêm trọng thì gọi onFatal để chuyển sang iframe embed.
+const HlsPlayer = ({ src, onFatal }) => {
     const videoRef = useRef(null);
-    const [currentChap, setCurrentChap] = useState(0);
-    const { data: movieInfo, loading } = useMovie(id);
-
-    const chapterList = useMemo(
-        () => (Array.isArray(movieInfo?.episodes) ? movieInfo.episodes : []),
-        [movieInfo?.episodes],
-    );
-
-    const srcMovie = chapterList[currentChap]?.video || "";
-
-    useEffect(() => {
-        setCurrentChap(0);
-    }, [id]);
-
-    useEffect(() => {
-        if (currentChap >= chapterList.length) {
-            setCurrentChap(0);
-        }
-    }, [chapterList.length, currentChap]);
 
     useEffect(() => {
         const video = videoRef.current;
-        if (!video || !srcMovie) return undefined;
+        if (!video || !src) return undefined;
 
         if (Hls.isSupported()) {
             const hls = new Hls({ enableWorker: true });
-            hls.loadSource(srcMovie);
+            hls.on(Hls.Events.ERROR, (_, data) => {
+                if (data.fatal) onFatal();
+            });
+            hls.loadSource(src);
             hls.attachMedia(video);
-
-            return () => {
-                hls.destroy();
-            };
+            return () => hls.destroy();
         }
 
-        if (video.canPlayType("application/vnd.apple.mpegurl")) {
-            video.src = srcMovie;
-            video.load();
-
-            return () => {
-                video.removeAttribute("src");
-                video.load();
-            };
-        }
-
-        video.src = srcMovie;
+        video.src = src;
         video.load();
-
         return () => {
             video.removeAttribute("src");
             video.load();
         };
-    }, [srcMovie]);
+    }, [src, onFatal]);
 
-    if (loading && !movieInfo) {
+    return (
+        <video
+            ref={videoRef}
+            className="absolute inset-0 h-full w-full"
+            controls
+            autoPlay
+            playsInline
+            onError={onFatal}
+        />
+    );
+};
+
+const Watch = () => {
+    const { slug } = useParams();
+    const [searchParams] = useSearchParams();
+    const { data: movie, loading } = useKKMovie(slug);
+    const [useEmbed, setUseEmbed] = useState(false);
+    const switchToEmbed = useCallback(() => setUseEmbed(true), []);
+
+    const servers = movie?.servers || [];
+    const serverIndex = Math.min(
+        Number(searchParams.get("sv")) || 0,
+        Math.max(servers.length - 1, 0),
+    );
+    const server = servers[serverIndex];
+    const episodes = server?.episodes || [];
+    const episodeIndex = Math.max(
+        episodes.findIndex((ep) => ep.slug === searchParams.get("tap")),
+        0,
+    );
+    const episode = episodes[episodeIndex];
+    const nextEpisode = episodes[episodeIndex + 1];
+
+    useEffect(() => {
+        setUseEmbed(false);
+    }, [episode?.m3u8]);
+
+    // Đổi tập (cùng route nên ScrollToTop không chạy): đưa player về tầm nhìn.
+    const playerRef = useRef(null);
+    const previousEpisode = useRef(null);
+    useEffect(() => {
+        const current = episode?.slug;
+        if (previousEpisode.current && current !== previousEpisode.current) {
+            playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        previousEpisode.current = current;
+    }, [episode?.slug]);
+
+    if (loading && !movie) {
         return <DetailSkeleton />;
     }
 
-    if (!movieInfo) {
+    if (!movie) {
         return (
-            <div className="page-surface px-5 py-3 text-white lg:py-5">
-                <div className="mx-auto max-w-screen-xl">
-                    Không tìm thấy phim
-                </div>
+            <div className="page-surface px-5 py-16 text-center text-white">
+                Không tìm thấy phim
             </div>
         );
     }
 
+    const showEmbed = (useEmbed || !episode?.m3u8) && episode?.embed;
+
     return (
-        <div className="page-surface px-5 py-3 text-white lg:py-5">
+        <div className="page-surface px-3 py-4 text-white sm:px-5 min-[1025px]:py-6">
             <div className="mx-auto max-w-screen-xl">
-                <h1 className="text-2xl font-bold lg:text-3xl">
-                    {movieInfo?.type === "single"
-                        ? movieInfo.originName
-                        : `${movieInfo.originName} - Tập ${currentChap + 1}`}
-                </h1>
-                <div className="mt-5 flex flex-col gap-3 md:flex-row">
-                    <div className="flex-[3]">
-                        <div className="relative aspect-video w-full overflow-hidden rounded-md bg-black">
-                            {srcMovie ? (
-                                <video
-                                    ref={videoRef}
-                                    className="absolute inset-0 h-full w-full"
-                                    controls
-                                    playsInline
-                                    preload="metadata"
-                                />
-                            ) : (
-                                <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-400">
-                                    Video chưa sẵn sàng
-                                </div>
-                            )}
+                <div
+                    ref={playerRef}
+                    className="relative aspect-video w-full scroll-mt-20 overflow-hidden rounded-lg bg-black"
+                >
+                    {!episode ? (
+                        <div className="absolute inset-0 flex items-center justify-center text-sm text-muted">
+                            Video chưa sẵn sàng
                         </div>
+                    ) : showEmbed ? (
+                        <iframe
+                            key={episode.embed}
+                            src={episode.embed}
+                            title={movie.name}
+                            className="absolute inset-0 h-full w-full"
+                            allow="autoplay; fullscreen; picture-in-picture"
+                            allowFullScreen
+                            style={{ border: 0 }}
+                        />
+                    ) : (
+                        <HlsPlayer
+                            src={episode.m3u8}
+                            onFatal={switchToEmbed}
+                        />
+                    )}
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <h1 className="text-xl font-bold sm:text-2xl">
+                            <Link
+                                to={`/phim/${movie.slug}`}
+                                className="transition-colors hover:text-primary"
+                            >
+                                {movie.name}
+                            </Link>
+                        </h1>
+                        <p className="mt-1 text-sm text-muted">
+                            {[movie.originName, server?.name, episode?.name]
+                                .filter(Boolean)
+                                .join(" • ")}
+                        </p>
                     </div>
-                    {movieInfo?.type !== "single" && (
-                        <aside className="flex-1">
-                            <div className="h-[300px] overflow-auto overscroll-contain rounded-md bg-[#1a1c21] p-3 lg:h-[400px]">
-                                <p className="text-lg font-medium">
-                                    Chọn tập phim
-                                </p>
-                                <ul className="mt-4 flex flex-wrap items-center gap-3">
-                                    {chapterList.map((chap, index) => (
-                                        <li key={chap._id || chap.video || index}>
-                                            <button
-                                                type="button"
-                                                className={`flex h-11 w-11 items-center justify-center rounded-lg transition-colors ${
-                                                    currentChap === index
-                                                        ? "bg-green-700"
-                                                        : "bg-[#292e39] hover:bg-[#343a46]"
-                                                }`}
-                                                onClick={() =>
-                                                    setCurrentChap(index)
-                                                }
-                                                aria-label={`Tập ${index + 1}`}
-                                            >
-                                                {index + 1}
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </aside>
-                    )}
+                    <div className="flex gap-2">
+                        {episode?.m3u8 && episode?.embed && (
+                            <button
+                                type="button"
+                                onClick={() => setUseEmbed((value) => !value)}
+                                className="rounded-full bg-surface-3 px-4 py-2 text-sm transition-colors hover:bg-surface-4"
+                            >
+                                {showEmbed ? "Player chính" : "Player dự phòng"}
+                            </button>
+                        )}
+                        {nextEpisode && (
+                            <Link
+                                to={`/xem/${movie.slug}?sv=${serverIndex}&tap=${nextEpisode.slug}`}
+                                className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-ink transition-colors hover:bg-primary-hover"
+                            >
+                                Tập tiếp
+                            </Link>
+                        )}
+                    </div>
                 </div>
-                <div className="mt-4 space-y-3 lg:text-lg">
-                    {movieInfo.time && (
-                        <div className="flex gap-2">
-                            <p className="font-medium">Thời gian:</p>
-                            <p>{movieInfo.time}</p>
-                        </div>
-                    )}
-                    {movieInfo.content && (
-                        <div className="flex gap-2">
-                            <p className="whitespace-nowrap font-medium">
-                                Nội dung:
-                            </p>
-                            <p>{movieInfo.content}</p>
-                        </div>
-                    )}
-                </div>
+
+                {episodes.length > 1 || servers.length > 1 ? (
+                    <section className="mt-6 rounded-xl bg-surface-2 p-4 sm:p-5">
+                        <h2 className="mb-4 text-lg font-semibold">
+                            Danh sách tập
+                        </h2>
+                        <EpisodeList
+                            key={`${slug}-${serverIndex}`}
+                            movie={movie}
+                            activeServer={serverIndex}
+                            activeEpisode={episode?.slug}
+                        />
+                    </section>
+                ) : null}
+
+                {movie.content && (
+                    <section className="mt-6 rounded-xl bg-surface-2 p-4 text-sm leading-7 text-gray-200 sm:p-5 sm:text-base">
+                        {movie.content}
+                    </section>
+                )}
             </div>
         </div>
     );

@@ -32,7 +32,7 @@ const AuthInput = ({
     showPassword = false,
     onToggleShowPassword,
 }) => (
-    <div className="flex h-11 items-center rounded-xl border border-white/10 bg-[#0d1422] px-3.5 transition-colors focus-within:border-[#ffc83d] focus-within:ring-2 focus-within:ring-[#ffc83d]/20 sm:h-12 sm:px-4">
+    <div className="flex h-11 items-center rounded-xl border border-white/10 bg-surface-top px-3.5 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 sm:h-12 sm:px-4">
         <input
             type={isPassword ? (showPassword ? "text" : "password") : type}
             name={name}
@@ -49,7 +49,7 @@ const AuthInput = ({
                 type="button"
                 tabIndex={-1}
                 onClick={onToggleShowPassword}
-                className="ml-3 text-xs font-semibold text-[#ffcf45]"
+                className="ml-3 text-xs font-semibold text-primary"
             >
                 {showPassword ? "Ẩn" : "Hiện"}
             </button>
@@ -236,8 +236,8 @@ const AuthModal = ({ initialMode = "login", onClose }) => {
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center overflow-y-auto bg-[#02050c]/75 p-4 backdrop-blur-[3px]">
-            <div className="relative my-auto max-h-[calc(100dvh-32px)] w-[calc(100vw-32px)] max-w-[500px] overflow-y-auto rounded-2xl border border-white/10 bg-[#101827] p-4 text-white shadow-2xl shadow-black/50 sm:p-6 lg:p-7">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center overflow-y-auto bg-surface/75 p-4 backdrop-blur-[3px]">
+            <div className="relative my-auto max-h-[calc(100dvh-32px)] w-[calc(100vw-32px)] max-w-[500px] overflow-y-auto rounded-2xl border border-white/10 bg-surface-2 p-4 text-white shadow-2xl shadow-black/50 sm:p-6 lg:p-7">
                 <button
                     type="button"
                     onClick={onClose}
@@ -261,13 +261,13 @@ const AuthModal = ({ initialMode = "login", onClose }) => {
                     </p>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 rounded-full border border-white/10 bg-[#070b14] p-1 sm:mt-5">
+                <div className="mt-4 grid grid-cols-2 rounded-full border border-white/10 bg-surface p-1 sm:mt-5">
                     <button
                         type="button"
                         onClick={() => switchMode("login")}
                         className={`h-9 rounded-full text-sm font-semibold transition-colors sm:h-10 ${
                             isLogin
-                                ? "bg-[#ffc83d] text-[#120d02]"
+                                ? "bg-primary text-primary-ink"
                                 : "text-gray-300 hover:text-white"
                         }`}
                     >
@@ -278,7 +278,7 @@ const AuthModal = ({ initialMode = "login", onClose }) => {
                         onClick={() => switchMode("register")}
                         className={`h-9 rounded-full text-sm font-semibold transition-colors sm:h-10 ${
                             !isLogin
-                                ? "bg-[#ffc83d] text-[#120d02]"
+                                ? "bg-primary text-primary-ink"
                                 : "text-gray-300 hover:text-white"
                         }`}
                     >
@@ -342,7 +342,7 @@ const AuthModal = ({ initialMode = "login", onClose }) => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="flex h-10 flex-1 items-center justify-center rounded-full bg-[#ffc83d] text-sm font-semibold text-[#120d02] transition-opacity disabled:cursor-not-allowed disabled:opacity-60 sm:h-11"
+                                className="flex h-10 flex-1 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-ink transition-opacity disabled:cursor-not-allowed disabled:opacity-60 sm:h-11"
                             >
                                 {loading ? "Đang đăng nhập..." : "Đăng nhập"}
                             </button>
@@ -432,7 +432,7 @@ const AuthModal = ({ initialMode = "login", onClose }) => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="flex h-10 flex-1 items-center justify-center rounded-full bg-[#ffc83d] text-sm font-semibold text-[#120d02] transition-opacity disabled:cursor-not-allowed disabled:opacity-60 sm:h-11"
+                                className="flex h-10 flex-1 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-ink transition-opacity disabled:cursor-not-allowed disabled:opacity-60 sm:h-11"
                             >
                                 {loading ? "Đang đăng ký..." : "Đăng ký"}
                             </button>

@@ -73,7 +73,7 @@ const Comment = memo(function Comment({
             className={`flex gap-3 rounded-2xl transition-colors ${
                 isReply
                     ? "border-l border-white/10 py-2.5 pl-2.5 sm:ml-6 sm:pl-4 min-[1025px]:ml-8"
-                    : "bg-[#171c28] p-3.5 sm:p-4"
+                    : "bg-surface-2 p-3.5 sm:p-4"
             }`}
         >
             <div
@@ -115,7 +115,7 @@ const Comment = memo(function Comment({
                     {canReply && (
                         <button
                             type="button"
-                            className="rounded-full px-2.5 py-1 text-xs font-semibold text-[#ffcf45] transition-colors hover:bg-white/5"
+                            className="rounded-full px-2.5 py-1 text-xs font-semibold text-primary transition-colors hover:bg-white/5"
                             onClick={() =>
                                 setActiveComment({
                                     id: commentId,

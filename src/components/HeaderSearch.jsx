@@ -6,25 +6,11 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { API_URL } from "@libs/config";
-import { useSearchMovies } from "@/hooks/useMovieData";
-
-const getPosterUrl = (movie) => {
-    if (!movie?.posterUrl) return "/img-placeholder.jpg";
-    return movie.posterUrl.startsWith("http")
-        ? movie.posterUrl
-        : `${API_URL}/images/movies/${movie.posterUrl}`;
-};
+import { useKKSearch } from "@/hooks/useMovieData";
+import PosterImage from "./PosterImage";
 
 const getMovieMeta = (movie) =>
-    [
-        movie?.year || movie?.releaseYear,
-        movie?.type === "series"
-            ? "Phim bộ"
-            : movie?.type === "single"
-              ? "Phim lẻ"
-              : movie?.genres?.[0]?.nameGenre,
-    ]
+    [movie?.year, movie?.typeLabel, movie?.episodeCurrent]
         .filter(Boolean)
         .join(" • ");
 
@@ -56,18 +42,14 @@ const HeaderSearch = ({ className = "", onNavigate }) => {
     }, []);
 
     const {
-        data: searchData = [],
+        data: searchData,
         loading,
         fetching,
-    } = useSearchMovies(debouncedKeyword, {
-        enabled: Boolean(debouncedKeyword),
-        staleTime: 30 * 1000,
+    } = useKKSearch(debouncedKeyword, { limit: 6 }, {
+        staleTime: 5 * 60 * 1000,
     });
 
-    const movies = useMemo(
-        () => (Array.isArray(searchData) ? searchData.slice(0, 6) : []),
-        [searchData],
-    );
+    const movies = useMemo(() => searchData?.items || [], [searchData]);
     const hasKeyword = Boolean(keyword.trim());
     const isDebouncing = hasKeyword && keyword.trim() !== debouncedKeyword;
     const isSearching = hasKeyword && (isDebouncing || loading || fetching);
@@ -83,13 +65,11 @@ const HeaderSearch = ({ className = "", onNavigate }) => {
         if (event.key !== "Enter") return;
 
         event.preventDefault();
-        if (movies[0]?._id) {
-            setOpen(false);
-            onNavigate?.();
-            navigate(`/info/${movies[0]._id}`);
-        } else {
-            setOpen(true);
-        }
+        const trimmed = keyword.trim();
+        if (!trimmed) return;
+        setOpen(false);
+        onNavigate?.();
+        navigate(`/tim-kiem?keyword=${encodeURIComponent(trimmed)}`);
     };
 
     const handleMovieClick = () => {
@@ -129,12 +109,12 @@ const HeaderSearch = ({ className = "", onNavigate }) => {
             </div>
 
             {shouldShowDropdown && (
-                <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-[min(390px,calc(100dvh-120px))] overflow-y-auto rounded-xl border border-white/10 bg-[#101827] p-2 shadow-2xl shadow-black/50 max-sm:fixed max-sm:left-4 max-sm:right-4 max-sm:top-[76px]">
+                <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-[min(390px,calc(100dvh-120px))] overflow-y-auto rounded-xl border border-white/10 bg-surface-2 p-2 shadow-2xl shadow-black/50 max-sm:fixed max-sm:left-4 max-sm:right-4 max-sm:top-[60px]">
                     {isSearching ? (
                         <div className="flex items-center gap-3 px-3 py-4 text-sm text-gray-300">
                             <FontAwesomeIcon
                                 icon={faSpinner}
-                                className="animate-spin text-[#ffc83d]"
+                                className="animate-spin text-primary"
                             />
                             Đang tìm phim...
                         </div>
@@ -145,26 +125,27 @@ const HeaderSearch = ({ className = "", onNavigate }) => {
                     ) : (
                         <ul className="space-y-1">
                             {movies.map((movie) => (
-                                <li key={movie._id}>
+                                <li key={movie._id || movie.slug}>
                                     <Link
-                                        to={`/info/${movie._id}`}
+                                        to={`/phim/${movie.slug}`}
                                         onClick={handleMovieClick}
                                         className="flex gap-3 rounded-lg p-2 transition-colors hover:bg-white/10"
                                     >
-                                        <img
-                                            src={getPosterUrl(movie)}
-                                            alt={movie.originName}
+                                        <PosterImage
+                                            src={movie.posterUrl}
+                                            alt={movie.name}
+                                            widths={[80]}
                                             className="h-14 w-10 flex-shrink-0 rounded-md object-cover"
-                                            loading="lazy"
-                                            decoding="async"
-                                            draggable="false"
                                         />
                                         <div className="min-w-0 py-1">
                                             <p className="line-clamp-1 font-semibold text-white">
+                                                {movie.name}
+                                            </p>
+                                            <p className="line-clamp-1 text-xs text-muted">
                                                 {movie.originName}
                                             </p>
                                             {getMovieMeta(movie) && (
-                                                <p className="mt-1 text-sm text-gray-400">
+                                                <p className="mt-0.5 text-xs text-gray-400">
                                                     {getMovieMeta(movie)}
                                                 </p>
                                             )}
@@ -173,6 +154,15 @@ const HeaderSearch = ({ className = "", onNavigate }) => {
                                 </li>
                             ))}
                         </ul>
+                    )}
+                    {!isSearching && movies.length > 0 && (
+                        <Link
+                            to={`/tim-kiem?keyword=${encodeURIComponent(keyword.trim())}`}
+                            onClick={handleMovieClick}
+                            className="mt-1 block rounded-lg py-2.5 text-center text-sm font-medium text-primary transition-colors hover:bg-white/10"
+                        >
+                            Xem tất cả kết quả
+                        </Link>
                     )}
                 </div>
             )}

@@ -26,7 +26,7 @@ const CommentForm = ({
         <form onSubmit={onSubmit} className={`mt-2 ${className}`}>
             <textarea
                 value={text}
-                className="min-h-20 w-full resize-none rounded-xl border border-white/10 bg-[#171c28] p-3 text-sm text-white outline-none transition-colors placeholder:text-gray-400 focus:border-[#ffb700] focus:ring-2 focus:ring-[#ffb700]/20 disabled:cursor-not-allowed disabled:opacity-70"
+                className="min-h-20 w-full resize-none rounded-xl border border-white/10 bg-surface-2 p-3 text-sm text-white outline-none transition-colors placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-70"
                 placeholder="Nhập bình luận"
                 onChange={(event) => setText(event.target.value)}
                 disabled={isSubmitting}
@@ -34,7 +34,7 @@ const CommentForm = ({
             <div className="mt-2.5 flex flex-wrap gap-2">
                 <button
                     type="submit"
-                    className="flex min-h-9 min-w-[96px] cursor-pointer items-center justify-center rounded-full bg-[#ffb700] px-4 text-sm font-semibold text-[#171c28] transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex min-h-9 min-w-[96px] cursor-pointer items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-ink transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={isTextareaDisabled || isSubmitting}
                 >
                     {isSubmitting ? "Đang gửi..." : submitLabel}
