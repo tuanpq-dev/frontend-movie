@@ -1,331 +1,209 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+import { Link, useParams } from "react-router-dom";
 import { faFilm, faPlay } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import CircularProgressBar from "@components/CircularProgressBar";
+import EpisodeList from "@components/EpisodeList";
+import PosterImage from "@components/PosterImage";
+import MediaList from "@components/MediaList";
 import { DetailSkeleton } from "@components/Skeleton";
 import { useModalContext } from "@context/ModalProvider";
-import { useUserContext } from "@context/UserContext";
-import Comments from "@components/Comments";
-import { showSuccessToast } from "@components/Toast/Toast";
-import PaymentModal from "@components/PaymentModal";
-import { API_URL } from "@libs/config";
-import { apiClient } from "@libs/apiClient";
-import { invalidateCache } from "@libs/requestCache";
-import { useMovie, usePaymentStatus } from "@/hooks/useMovieData";
-import Cookies from "js-cookie";
+import { useKKList, useKKMovie } from "@/hooks/useMovieData";
+
+const InfoRow = ({ label, children }) => (
+    <div className="flex gap-3 text-sm leading-6">
+        <span className="w-24 shrink-0 text-muted">{label}</span>
+        <span className="min-w-0 text-gray-100">{children}</span>
+    </div>
+);
+
+const TaxonomyLinks = ({ items, basePath }) =>
+    items.map((item, index) => (
+        <span key={item.slug}>
+            {index > 0 && ", "}
+            <Link
+                to={`${basePath}/${item.slug}`}
+                className="transition-colors hover:text-primary"
+            >
+                {item.name}
+            </Link>
+        </span>
+    ));
 
 const MovieDetail = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [isLoadingPayment, setIsLoadingPayment] = useState(false);
-    const [isShowModal, setIsShowModal] = useState(false);
-
-    const { id: userId, isAdmin } = useUserContext();
+    const { slug } = useParams();
     const { handlePlayTrailer } = useModalContext();
-    const {
-        data: movieInfo,
-        loading: isLoadingMovie,
-        error: movieError,
-    } = useMovie(id);
-    const { data: paymentStatus } = usePaymentStatus(userId, {
-        enabled: Boolean(userId && !isAdmin),
-        staleTime: 30 * 1000,
-    });
+    const { data: movie, loading, error } = useKKMovie(slug);
 
-    const showPaymentModal = useCallback(() => {
-        document.documentElement.style.overflow = "hidden";
-        setIsShowModal(true);
-    }, []);
+    const relatedCategory = movie?.categories?.[0];
+    const { data: related } = useKKList(
+        relatedCategory ? `/v1/api/the-loai/${relatedCategory.slug}` : "",
+        { limit: 13 },
+    );
+    const relatedMovies = useMemo(
+        () =>
+            (related?.items || [])
+                .filter((item) => item.slug !== slug)
+                .slice(0, 12),
+        [related, slug],
+    );
 
-    const hidePaymentModal = useCallback(() => {
-        document.documentElement.style.overflow = "auto";
-        setIsShowModal(false);
-    }, []);
-
-    useEffect(() => {
-        return () => {
-            document.documentElement.style.overflow = "auto";
-        };
-    }, []);
-
-    const token = Cookies.get("accessToken");
-
-    const handleAddFavoriteMovie = useCallback(async () => {
-        if (!userId || !token) {
-            showSuccessToast("Thông báo", "Vui lòng đăng nhập để tiếp tục");
-            return;
-        }
-
-        try {
-            await apiClient.post("/api/favoriteMovies", { movieIds: [id] });
-            invalidateCache("favorite");
-            showSuccessToast(
-                "Thành công",
-                "Bạn đã thêm phim vào danh sách yêu thích",
-            );
-        } catch (error) {
-            console.error("Lỗi khi thêm phim vào danh sách yêu thích:", error);
-            const status = error.response?.status;
-
-            if (status === 400) {
-                showSuccessToast(
-                    "Thông báo",
-                    "Phim này đã có trong danh sách yêu thích",
-                );
-            } else if (status === 403) {
-                showSuccessToast(
-                    "Lỗi",
-                    "Bạn không có quyền thêm phim vào danh sách",
-                );
-            } else {
-                showSuccessToast("Lỗi", "Không thể thêm phim vào danh sách");
-            }
-        }
-    }, [userId, token, id]);
-
-    const handleWatchMovie = useCallback(async () => {
-        if (!movieInfo?._id) return;
-
-        if (isAdmin) {
-            navigate(`/watch/${movieInfo._id}`);
-            return;
-        }
-
-        try {
-            const status =
-                paymentStatus ||
-                (userId
-                    ? await apiClient.get(
-                          `/api/payment/payment-status/${userId}`,
-                      )
-                    : null);
-
-            if (status?.paid) {
-                navigate(`/watch/${movieInfo._id}`);
-            } else {
-                showPaymentModal();
-            }
-        } catch (error) {
-            console.error("Lỗi khi kiểm tra thanh toán:", error);
-            showPaymentModal();
-        }
-    }, [
-        userId,
-        movieInfo?._id,
-        isAdmin,
-        navigate,
-        paymentStatus,
-        showPaymentModal,
-    ]);
-
-    const handlePayment = useCallback(async () => {
-        if (!userId) {
-            showSuccessToast("Thông báo", "Vui lòng đăng nhập!");
-            return;
-        }
-
-        setIsLoadingPayment(true);
-        try {
-            const data = await apiClient.post("/api/payment/create_payment", {
-                userId,
-            });
-
-            window.open(data.paymentUrl, "_blank");
-
-            const onPaymentSuccess = (e) => {
-                if (e.key === "paymentSuccess") {
-                    localStorage.removeItem("paymentSuccess");
-                    window.removeEventListener("storage", onPaymentSuccess);
-                    invalidateCache(`payment:status:${userId}`);
-                    navigate(`/watch/${movieInfo._id}`);
-                }
-            };
-
-            window.addEventListener("storage", onPaymentSuccess);
-
-            setTimeout(() => {
-                window.removeEventListener("storage", onPaymentSuccess);
-            }, 600000);
-        } catch (error) {
-            const message = error.response?.data?.message || "Lỗi kết nối!";
-            showSuccessToast("Lỗi", message);
-        } finally {
-            setIsLoadingPayment(false);
-        }
-    }, [userId, movieInfo?._id, navigate]);
-
-    const getImageUrl = useCallback((url) => {
-        if (!url) return "/img-placeholder.jpg";
-        if (url.startsWith("http")) return url;
-        return `${API_URL}/images/movies/${url}`;
-    }, []);
-
-    const genresText = useMemo(() => {
-        return (movieInfo?.genres || [])
-            .map((genre) => genre.nameGenre)
-            .join(", ");
-    }, [movieInfo?.genres]);
-
-    if (isLoadingMovie && !movieInfo) {
+    if (loading && !movie) {
         return <DetailSkeleton />;
     }
 
-    if (!movieInfo || movieError) {
+    if (!movie || error) {
         return (
-            <div className="page-surface px-5 py-3 lg:py-5">
-                <div className="mx-auto max-w-screen-xl text-center text-white">
-                    <p>Không tìm thấy phim</p>
-                </div>
+            <div className="page-surface px-5 py-16 text-center text-white">
+                Không tìm thấy phim
             </div>
         );
     }
 
-    return (
-        <div className="page-surface overflow-x-hidden px-3 py-3 sm:px-5 min-[1025px]:py-5">
-            <div className="mx-auto max-w-screen-xl">
-                <div className="relative py-3">
-                    <figure className="h-[380px] overflow-hidden rounded-md sm:h-[430px] min-[1025px]:h-[450px]">
-                        <img
-                            src={getImageUrl(movieInfo.thumbUrl)}
-                            alt={movieInfo.originName}
-                            width={1280}
-                            height={450}
-                            loading="eager"
-                            decoding="async"
-                            className="h-full w-full object-cover brightness-50"
-                        />
-                    </figure>
-                    <figure className="absolute left-4 top-4 hidden h-[220px] w-[154px] overflow-hidden rounded-sm sm:block md:h-[260px] md:w-[182px] min-[1025px]:left-5 min-[1025px]:top-5 min-[1025px]:h-[285px] min-[1025px]:w-[200px]">
-                        <img
-                            src={getImageUrl(movieInfo.posterUrl)}
-                            alt={`${movieInfo.originName} poster`}
-                            width={200}
-                            height={285}
-                            loading="eager"
-                            decoding="async"
-                            className="h-full w-full object-cover"
-                        />
-                    </figure>
+    const firstEpisode = movie.servers?.[0]?.episodes?.[0];
+    const tags = [
+        movie.quality,
+        movie.lang,
+        movie.year,
+        movie.typeLabel,
+        movie.episodeCurrent,
+        movie.time,
+    ].filter(Boolean);
 
-                    <div className="absolute inset-x-4 bottom-4 sm:bottom-6 sm:left-5 sm:right-5 md:bottom-7 min-[1025px]:bottom-9">
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-[10px]">
-                            {movieInfo.voteAverage > 0 && (
-                                <div className="flex items-center gap-1">
-                                    <CircularProgressBar
-                                        percent={Math.round(
-                                            movieInfo.voteAverage * 10,
-                                        )}
-                                    />
-                                    <span className="text-white">Rating</span>
-                                </div>
-                            )}
-                            <ul className="flex flex-wrap gap-2">
-                                {(movieInfo.genres || [])
-                                    .slice(0, 3)
-                                    .map((genre) => (
-                                        <li
-                                            key={genre._id}
-                                            className="rounded-lg bg-white px-2 py-1 text-xs font-medium text-black sm:p-[6px] sm:text-sm"
-                                        >
-                                            {genre.nameGenre}
-                                        </li>
-                                    ))}
-                            </ul>
+    return (
+        <div className="page-surface overflow-x-hidden">
+            <div className="relative">
+                <div className="absolute inset-0 h-[420px] overflow-hidden sm:h-[520px]">
+                    <img
+                        src={movie.thumbUrl}
+                        alt=""
+                        className="h-full w-full object-cover opacity-40"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-surface/10" />
+                </div>
+
+                <div className="relative mx-auto flex max-w-screen-xl flex-col gap-6 px-4 pt-10 text-white sm:flex-row sm:px-6 sm:pt-16 min-[1025px]:pt-24">
+                    <PosterImage
+                        src={movie.posterUrl}
+                        alt={movie.name}
+                        widths={[480]}
+                        loading="eager"
+                        className="mx-auto aspect-[2/3] w-40 shrink-0 rounded-lg bg-surface-3 object-cover shadow-2xl shadow-black/50 sm:mx-0 sm:w-52 min-[1025px]:w-60"
+                    />
+                    <div className="min-w-0 flex-1">
+                        <h1 className="text-2xl font-bold leading-tight sm:text-3xl min-[1025px]:text-4xl">
+                            {movie.name}
+                        </h1>
+                        <p className="mt-1 text-primary">{movie.originName}</p>
+
+                        <div className="mt-4 flex flex-wrap gap-2 text-xs sm:text-sm">
+                            {tags.map((tag) => (
+                                <span
+                                    key={tag}
+                                    className="rounded-md border border-white/30 px-2.5 py-1"
+                                >
+                                    {tag}
+                                </span>
+                            ))}
                         </div>
 
-                        <div className="left-5 mt-2 flex flex-wrap items-center gap-2 sm:mt-3">
-                            <button
-                                className="flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full bg-black px-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 min-[420px]:flex-none sm:min-h-11 sm:text-base"
-                                onClick={() =>
-                                    handlePlayTrailer(movieInfo?.trailerKey)
-                                }
-                                aria-label="Xem trailer"
-                            >
-                                <FontAwesomeIcon icon={faFilm} />
-                                Xem Trailer
-                            </button>
-                            <button
-                                onClick={handleWatchMovie}
-                                className="flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full bg-[#ffb700] px-4 text-sm font-medium text-[#171c28] transition-colors hover:bg-[#e6a600] min-[420px]:flex-none sm:min-h-11 sm:px-5 sm:text-base"
-                                aria-label="Xem phim ngay"
-                            >
-                                <FontAwesomeIcon
-                                    icon={faPlay}
-                                    className="text-white"
-                                />
-                                Xem ngay
-                            </button>
-                            <button
-                                className="flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-[#ff0000] px-4 text-sm text-white transition-colors hover:bg-[#cc0000] min-[520px]:w-auto sm:min-h-11 sm:px-5 sm:text-base"
-                                onClick={handleAddFavoriteMovie}
-                                aria-label="Thêm vào yêu thích"
-                            >
-                                <img
-                                    src="/heart.svg"
-                                    alt=""
-                                    className="invert"
-                                />
-                                Thêm vào yêu thích
-                            </button>
+                        <div className="mt-5 flex flex-wrap items-center gap-3">
+                            {firstEpisode && (
+                                <Link
+                                    to={`/xem/${movie.slug}`}
+                                    className="flex h-11 items-center gap-2 rounded-full bg-primary px-6 font-semibold text-primary-ink transition-colors hover:bg-primary-hover"
+                                >
+                                    <FontAwesomeIcon icon={faPlay} />
+                                    Xem ngay
+                                </Link>
+                            )}
+                            {movie.trailerKey && (
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handlePlayTrailer(movie.trailerKey)
+                                    }
+                                    className="flex h-11 items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 font-medium transition-colors hover:bg-white/20"
+                                >
+                                    <FontAwesomeIcon icon={faFilm} />
+                                    Trailer
+                                </button>
+                            )}
+                            {movie.voteAverage > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <CircularProgressBar
+                                        percent={Math.round(
+                                            movie.voteAverage * 10,
+                                        )}
+                                    />
+                                    <span className="text-sm text-muted">
+                                        TMDB
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-6 space-y-1.5">
+                            {movie.categories.length > 0 && (
+                                <InfoRow label="Thể loại">
+                                    <TaxonomyLinks
+                                        items={movie.categories}
+                                        basePath="/the-loai"
+                                    />
+                                </InfoRow>
+                            )}
+                            {movie.countries.length > 0 && (
+                                <InfoRow label="Quốc gia">
+                                    <TaxonomyLinks
+                                        items={movie.countries}
+                                        basePath="/quoc-gia"
+                                    />
+                                </InfoRow>
+                            )}
+                            {movie.year && (
+                                <InfoRow label="Năm">
+                                    <Link
+                                        to={`/nam/${movie.year}`}
+                                        className="transition-colors hover:text-primary"
+                                    >
+                                        {movie.year}
+                                    </Link>
+                                </InfoRow>
+                            )}
+                            {movie.directors.length > 0 && (
+                                <InfoRow label="Đạo diễn">
+                                    {movie.directors.join(", ")}
+                                </InfoRow>
+                            )}
+                            {movie.actors.length > 0 && (
+                                <InfoRow label="Diễn viên">
+                                    {movie.actors.slice(0, 10).join(", ")}
+                                </InfoRow>
+                            )}
                         </div>
                     </div>
                 </div>
-
-                <div className="mt-3 min-w-0 space-y-2 break-words text-sm leading-6 text-white sm:text-base min-[1025px]:text-lg">
-                    <h1 className="text-2xl font-bold leading-tight sm:text-3xl min-[1025px]:text-4xl">
-                        {movieInfo.originName}
-                    </h1>
-                    {movieInfo.time && (
-                        <p>
-                            <span className="font-medium">Thời gian:</span>{" "}
-                            {movieInfo.time}
-                        </p>
-                    )}
-                    {movieInfo.year && (
-                        <p>
-                            <span className="font-medium">Năm phát hành:</span>{" "}
-                            {movieInfo.year}
-                        </p>
-                    )}
-                    {genresText && (
-                        <p>
-                            <span className="font-medium">Thể loại:</span>{" "}
-                            {genresText}
-                        </p>
-                    )}
-                    {movieInfo.content && (
-                        <p>
-                            <span className="font-medium">Nội dung:</span>{" "}
-                            {movieInfo.content}
-                        </p>
-                    )}
-                    {movieInfo.director && (
-                        <p>
-                            <span className="font-medium">Đạo diễn:</span>{" "}
-                            {movieInfo.director}
-                        </p>
-                    )}
-                    {movieInfo.actor && (
-                        <p>
-                            <span className="font-medium">Diễn viên:</span>{" "}
-                            {movieInfo.actor}
-                        </p>
-                    )}
-                </div>
-
-                {movieInfo._id && (
-                    <Comments movieId={movieInfo._id} userId={userId} />
-                )}
-
-                {isShowModal && (
-                    <PaymentModal
-                        isLoading={isLoadingPayment}
-                        hidePaymentModal={hidePaymentModal}
-                        handlePayment={handlePayment}
-                    />
-                )}
             </div>
+
+            <div className="mx-auto max-w-screen-xl space-y-6 px-4 py-8 text-white sm:px-6">
+                {movie.content && (
+                    <section className="rounded-xl bg-surface-2 p-4 sm:p-5">
+                        <h2 className="mb-2 text-lg font-semibold">
+                            Nội dung phim
+                        </h2>
+                        <p className="text-sm leading-7 text-gray-200 sm:text-base">
+                            {movie.content}
+                        </p>
+                    </section>
+                )}
+
+                <section className="rounded-xl bg-surface-2 p-4 sm:p-5">
+                    <h2 className="mb-4 text-lg font-semibold">Danh sách tập</h2>
+                    <EpisodeList movie={movie} />
+                </section>
+            </div>
+
+            <MediaList movies={relatedMovies} title="Có thể bạn sẽ thích" />
         </div>
     );
 };

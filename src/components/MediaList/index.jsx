@@ -1,37 +1,41 @@
 import { memo } from "react";
+import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import MovieCard from "./MovieCard";
-import { API_URL } from "@libs/config";
 
-const getPosterUrl = (movie) => {
-    if (!movie?.posterUrl) return "/img-placeholder.jpg";
-    return movie.posterUrl.startsWith("http")
-        ? movie.posterUrl
-        : `${API_URL}/images/movies/${movie.posterUrl}`;
-};
+export const MovieGrid = ({ movies = [] }) => (
+    <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4 md:gap-x-4 min-[1025px]:grid-cols-5 xl:grid-cols-6">
+        {movies.map((movie) => (
+            <MovieCard key={movie._id || movie.slug} movie={movie} />
+        ))}
+    </div>
+);
 
-const MediaList = ({ movies = [], title }) => {
+// movies: danh sách đã normalize; viewAllTo: link "Xem tất cả" (tùy chọn)
+const MediaList = ({ movies = [], title, viewAllTo }) => {
+    if (!movies.length) return null;
+
     return (
-        <section className="media-section px-3 py-6 text-white sm:px-5 min-[1025px]:px-8 min-[1025px]:py-11">
-            <div className="mb-4 flex items-center gap-2.5 sm:mb-5 sm:gap-3">
-                <span className="h-6 w-1 rounded-full bg-[#ffc83d] sm:h-7" />
-                <h2 className="text-lg font-black tracking-tight sm:text-xl md:text-2xl min-[1025px]:text-3xl">
+        <section className="media-section px-3 py-6 text-white sm:px-5 min-[1025px]:px-8 min-[1025px]:py-8">
+            <div className="mb-4 flex items-center gap-3 sm:mb-5">
+                <h2 className="text-lg font-bold sm:text-xl md:text-2xl min-[1025px]:text-[28px]">
                     {title}
                 </h2>
+                {viewAllTo && (
+                    <Link
+                        to={viewAllTo}
+                        className="ml-auto flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary sm:ml-2"
+                    >
+                        Xem tất cả
+                        <FontAwesomeIcon
+                            icon={faChevronRight}
+                            className="text-[10px]"
+                        />
+                    </Link>
+                )}
             </div>
-            <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 md:gap-5 min-[1025px]:grid-cols-5 xl:grid-cols-6">
-                {movies.map((movie) => (
-                    <MovieCard
-                        key={movie._id}
-                        name={movie.originName}
-                        posterUrl={getPosterUrl(movie)}
-                        year={movie.year}
-                        time={movie.time}
-                        type={movie.type}
-                        content={movie.content}
-                        _id={movie._id}
-                    />
-                ))}
-            </div>
+            <MovieGrid movies={movies} />
         </section>
     );
 };

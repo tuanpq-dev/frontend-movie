@@ -3,15 +3,19 @@ import { getCached, invalidateCache, normalizeCacheKey, peekCache } from "@libs/
 
 const EMPTY_OPTIONS = {};
 
+// options: enabled, staleTime, keepPreviousData (giữ dữ liệu của key cũ trong lúc tải key mới — dùng cho phân trang/lọc)
 export const useCachedResource = (key, fetcher, options = EMPTY_OPTIONS) => {
     const cacheKey = useMemo(() => normalizeCacheKey(key), [key]);
     const enabled = options.enabled !== false && Boolean(cacheKey);
     const staleTime = options.staleTime;
-    const cachedData = enabled ? peekCache(cacheKey) : undefined;
+    const keepPreviousData = Boolean(options.keepPreviousData);
 
-    const [data, setData] = useState(cachedData);
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(enabled && cachedData === undefined);
+    // Lưu kèm key để không bao giờ trả nhầm dữ liệu của key trước (vd chuyển từ phim A sang phim B).
+    const [entry, setEntry] = useState(() => ({
+        key: cacheKey,
+        value: enabled ? peekCache(cacheKey) : undefined,
+    }));
+    const [errorEntry, setErrorEntry] = useState({ key: null, error: null });
     const [fetching, setFetching] = useState(false);
     const [version, setVersion] = useState(0);
 
@@ -27,7 +31,6 @@ export const useCachedResource = (key, fetcher, options = EMPTY_OPTIONS) => {
         let active = true;
 
         if (!enabled) {
-            setLoading(false);
             setFetching(false);
             return () => {
                 active = false;
@@ -36,29 +39,25 @@ export const useCachedResource = (key, fetcher, options = EMPTY_OPTIONS) => {
 
         const currentCache = peekCache(cacheKey);
         if (currentCache !== undefined) {
-            setData(currentCache);
-            setLoading(false);
-        } else {
-            setLoading(true);
+            setEntry({ key: cacheKey, value: currentCache });
         }
 
         setFetching(true);
-        setError(null);
+        setErrorEntry({ key: null, error: null });
 
         getCached(cacheKey, fetcher, { staleTime })
             .then((response) => {
                 if (active) {
-                    setData(response);
+                    setEntry({ key: cacheKey, value: response });
                 }
             })
             .catch((err) => {
                 if (active) {
-                    setError(err);
+                    setErrorEntry({ key: cacheKey, error: err });
                 }
             })
             .finally(() => {
                 if (active) {
-                    setLoading(false);
                     setFetching(false);
                 }
             });
@@ -68,11 +67,24 @@ export const useCachedResource = (key, fetcher, options = EMPTY_OPTIONS) => {
         };
     }, [cacheKey, enabled, fetcher, staleTime, version]);
 
+    const isCurrent = entry.key === cacheKey;
+    const error = errorEntry.key === cacheKey ? errorEntry.error : null;
+    const cached = enabled ? peekCache(cacheKey) : undefined;
+    const data = isCurrent
+        ? entry.value
+        : cached !== undefined
+          ? cached
+          : keepPreviousData
+            ? entry.value
+            : undefined;
+    const loading = enabled && !error && (isCurrent ? entry.value === undefined : cached === undefined);
+
     return {
         data,
         error,
         loading,
-        fetching,
+        fetching: fetching || (enabled && !isCurrent),
+        isPreviousData: !isCurrent && cached === undefined && keepPreviousData,
         reload,
         hasData: data !== undefined && data !== null,
     };

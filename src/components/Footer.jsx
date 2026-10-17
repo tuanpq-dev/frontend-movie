@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
     return (
-        <footer className="border-t border-white/10 bg-[#070b14] px-6 py-12 text-white">
+        <footer className="border-t border-white/10 bg-surface px-6 py-12 text-white">
             <div className="mx-auto grid gap-10 sm:grid-cols-2 lg:max-w-screen-xl lg:grid-cols-footer">
                 <div>
                     <h2>
@@ -35,9 +35,9 @@ const Footer = () => {
                             placeholder="Nhập email"
                             required
                             pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
-                            className="w-full rounded-full border border-solid border-white/10 bg-white/[0.04] px-4 py-2 font-medium text-white placeholder:text-gray-500 focus:border-[#ffc83d]"
+                            className="w-full rounded-full border border-solid border-white/10 bg-white/[0.04] px-4 py-2 font-medium text-white placeholder:text-gray-500 focus:border-primary"
                         />
-                        <button className="flex h-10 items-center justify-center rounded-full bg-[#ffc83d] px-5 text-sm font-bold text-[#120d02]">
+                        <button className="flex h-10 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-primary-ink">
                             Gửi
                         </button>
                     </form>
@@ -50,31 +50,31 @@ const Footer = () => {
                         <li>
                             <a
                                 href="#!"
-                                className="inline-block py-1 text-gray-400 hover:text-[#ffc83d]"
+                                className="inline-block py-1 text-gray-400 hover:text-primary"
                             >
                                 Phim mới
                             </a>
                         </li>
                         <li>
                             <Link
-                                to="/cartoon"
-                                className="inline-block py-1 text-gray-400 hover:text-[#ffc83d]"
+                                to="/danh-sach/hoat-hinh"
+                                className="inline-block py-1 text-gray-400 hover:text-primary"
                             >
                                 Phim hoạt hình
                             </Link>
                         </li>
                         <li>
                             <Link
-                                to="/tv"
-                                className="inline-block py-1 text-gray-400 hover:text-[#ffc83d]"
+                                to="/danh-sach/phim-bo"
+                                className="inline-block py-1 text-gray-400 hover:text-primary"
                             >
                                 Phim bộ
                             </Link>
                         </li>
                         <li>
                             <Link
-                                to="/movie"
-                                className="inline-block py-1 text-gray-400 hover:text-[#ffc83d]"
+                                to="/danh-sach/phim-le"
+                                className="inline-block py-1 text-gray-400 hover:text-primary"
                             >
                                 Phim lẻ
                             </Link>
@@ -89,7 +89,7 @@ const Footer = () => {
                         <li>
                             <a
                                 href="#!"
-                                className="inline-block py-1 text-gray-400 hover:text-[#ffc83d]"
+                                className="inline-block py-1 text-gray-400 hover:text-primary"
                             >
                                 Cổ trang
                             </a>
@@ -97,7 +97,7 @@ const Footer = () => {
                         <li>
                             <a
                                 href="#!"
-                                className="inline-block py-1 text-gray-400 hover:text-[#ffc83d]"
+                                className="inline-block py-1 text-gray-400 hover:text-primary"
                             >
                                 Hành động
                             </a>
@@ -105,7 +105,7 @@ const Footer = () => {
                         <li>
                             <a
                                 href="#!"
-                                className="inline-block py-1 text-gray-400 hover:text-[#ffc83d]"
+                                className="inline-block py-1 text-gray-400 hover:text-primary"
                             >
                                 Tình cảm
                             </a>
@@ -113,7 +113,7 @@ const Footer = () => {
                         <li>
                             <a
                                 href="#!"
-                                className="inline-block py-1 text-gray-400 hover:text-[#ffc83d]"
+                                className="inline-block py-1 text-gray-400 hover:text-primary"
                             >
                                 Viễn tưởng
                             </a>
@@ -128,7 +128,7 @@ const Footer = () => {
                         <li>
                             <a
                                 href="#!"
-                                className="inline-block py-1 text-gray-400 hover:text-[#ffc83d]"
+                                className="inline-block py-1 text-gray-400 hover:text-primary"
                             >
                                 DMCA
                             </a>
@@ -136,7 +136,7 @@ const Footer = () => {
                         <li>
                             <a
                                 href="#!"
-                                className="inline-block py-1 text-gray-400 hover:text-[#ffc83d]"
+                                className="inline-block py-1 text-gray-400 hover:text-primary"
                             >
                                 Liên hệ
                             </a>
@@ -144,7 +144,7 @@ const Footer = () => {
                         <li>
                             <a
                                 href="#!"
-                                className="inline-block py-1 text-gray-400 hover:text-[#ffc83d]"
+                                className="inline-block py-1 text-gray-400 hover:text-primary"
                             >
                                 Quyền riêng tư
                             </a>
@@ -152,7 +152,7 @@ const Footer = () => {
                         <li>
                             <a
                                 href="#!"
-                                className="inline-block py-1 text-gray-400 hover:text-[#ffc83d]"
+                                className="inline-block py-1 text-gray-400 hover:text-primary"
                             >
                                 Điều khoản dịch vụ
                             </a>
@@ -165,25 +165,25 @@ const Footer = () => {
                 <div className="flex items-center gap-3">
                     <a
                         href="#!"
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:bg-[#ffc83d] hover:text-[#120d02]"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:bg-primary hover:text-primary-ink"
                     >
                         <FontAwesomeIcon icon={faFacebookF} className="w-4" />
                     </a>
                     <a
                         href="#!"
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:bg-[#ffc83d] hover:text-[#120d02]"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:bg-primary hover:text-primary-ink"
                     >
                         <FontAwesomeIcon icon={faYoutube} />
                     </a>
                     <a
                         href="#!"
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:bg-[#ffc83d] hover:text-[#120d02]"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:bg-primary hover:text-primary-ink"
                     >
                         <FontAwesomeIcon icon={faTiktok} />
                     </a>
                     <a
                         href="#!"
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:bg-[#ffc83d] hover:text-[#120d02]"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:bg-primary hover:text-primary-ink"
                     >
                         <FontAwesomeIcon icon={faTwitter} />
                     </a>

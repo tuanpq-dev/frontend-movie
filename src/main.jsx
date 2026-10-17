@@ -14,11 +14,7 @@ import { RouteFallback } from "@components/Skeleton";
 const HomePage = lazy(() => import("./pages/HomePage.jsx"));
 const MovieDetail = lazy(() => import("@pages/MovieDetail"));
 const Watch = lazy(() => import("@pages/Watch"));
-const SingleMovie = lazy(() => import("@pages/SingleMovie"));
-const TVSeries = lazy(() => import("@pages/TVSeries"));
-const CartoonMovie = lazy(() => import("@pages/CartoonMovie"));
-const SearchPage = lazy(() => import("@pages/SearchPage"));
-const FavoriteList = lazy(() => import("@pages/FavoriteList"));
+const Catalog = lazy(() => import("@pages/Catalog"));
 const SignIn = lazy(() => import("@pages/SignIn"));
 const SignUp = lazy(() => import("@pages/SignUp"));
 const UserProfile = lazy(() => import("@pages/UserProfile"));
@@ -49,32 +45,32 @@ const router = createBrowserRouter([
                 element: withSuspense(<HomePage />),
             },
             {
-                path: "/info/:id",
+                path: "/phim/:slug",
                 element: withSuspense(<MovieDetail />),
             },
             {
-                path: "/watch/:id",
+                path: "/xem/:slug",
                 element: withSuspense(<Watch />),
             },
             {
-                path: "/movie",
-                element: withSuspense(<SingleMovie />),
+                path: "/danh-sach/:slug",
+                element: withSuspense(<Catalog kind="list" />),
             },
             {
-                path: "/tv",
-                element: withSuspense(<TVSeries />),
+                path: "/the-loai/:slug",
+                element: withSuspense(<Catalog kind="category" />),
             },
             {
-                path: "/cartoon",
-                element: withSuspense(<CartoonMovie />),
+                path: "/quoc-gia/:slug",
+                element: withSuspense(<Catalog kind="country" />),
             },
             {
-                path: "/search",
-                element: withSuspense(<SearchPage />),
+                path: "/nam/:slug",
+                element: withSuspense(<Catalog kind="year" />),
             },
             {
-                path: "/favorite",
-                element: withSuspense(<FavoriteList />),
+                path: "/tim-kiem",
+                element: withSuspense(<Catalog kind="search" />),
             },
         ],
     },
@@ -91,50 +87,51 @@ const router = createBrowserRouter([
         element: withSuspense(<UserProfile />),
     },
     {
+        path: "/admin",
         element: <AdminRouter element={<AdminLayout />} />,
         children: [
             {
-                path: "/admin/movie",
+                path: "movie",
                 element: withSuspense(<ManageMovie2 />),
             },
             {
-                path: "/admin/movie/create",
+                path: "movie/create",
                 element: withSuspense(<CreateMovie />),
             },
             {
-                path: "/admin/movie/edit/:id",
+                path: "movie/edit/:id",
                 element: withSuspense(<EditMovie />),
             },
             {
-                path: "/admin/user",
+                path: "user",
                 element: withSuspense(<ManageUser />),
             },
             {
-                path: "admin/user/edit/:id",
+                path: "user/edit/:id",
                 element: withSuspense(<EditUser />),
             },
             {
-                path: "/admin/genre",
+                path: "genre",
                 element: withSuspense(<ManageGenre />),
             },
             {
-                path: "/admin/genre/create",
+                path: "genre/create",
                 element: withSuspense(<CreateGenre />),
             },
             {
-                path: "/admin/genre/edit/:id",
+                path: "genre/edit/:id",
                 element: withSuspense(<EditGenre />),
             },
             {
-                path: "/admin/payment",
+                path: "payment",
                 element: withSuspense(<ManagePayment />),
             },
             {
-                path: "/admin/revenue",
+                path: "revenue",
                 element: withSuspense(<ManageRevenue />),
             },
             {
-                path: "/admin/comment",
+                path: "comment",
                 element: withSuspense(<ManageComment />),
             },
         ],

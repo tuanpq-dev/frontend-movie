@@ -6,12 +6,12 @@ export const RouteFallback = () => (
     <div className="page-surface px-5 py-6 lg:px-8 lg:py-10">
         <div className="mx-auto max-w-screen-xl">
             <SkeletonBlock className="h-8 w-48 rounded-md" />
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4 min-[1025px]:grid-cols-5 xl:grid-cols-6">
                 {Array.from({ length: 12 }).map((_, index) => (
-                    <div key={index} className="rounded-2xl bg-[#171c28] p-3">
-                        <SkeletonBlock className="aspect-square rounded-md" />
-                        <SkeletonBlock className="mt-3 h-4 w-4/5 rounded" />
-                        <SkeletonBlock className="mt-2 h-4 w-2/5 rounded" />
+                    <div key={index}>
+                        <SkeletonBlock className="aspect-[2/3] rounded-lg" />
+                        <SkeletonBlock className="mt-2 h-4 w-4/5 rounded" />
+                        <SkeletonBlock className="mt-1.5 h-3 w-2/5 rounded" />
                     </div>
                 ))}
             </div>
@@ -20,7 +20,7 @@ export const RouteFallback = () => (
 );
 
 export const HeroSkeleton = () => (
-    <div className="hidden bg-[#292e39] md:block">
+    <div className="hidden bg-surface md:block">
         <div className="grid grid-cols-3 gap-1">
             {Array.from({ length: 3 }).map((_, index) => (
                 <SkeletonBlock key={index} className="aspect-video" />
@@ -32,12 +32,12 @@ export const HeroSkeleton = () => (
 export const MovieGridSkeleton = ({ title = true, count = 12 }) => (
     <div className="media-section px-5 py-6 text-white lg:px-8 lg:py-10">
         {title && <SkeletonBlock className="mb-4 h-8 w-56 rounded-md" />}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4 min-[1025px]:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: count }).map((_, index) => (
-                <div key={index} className="rounded-2xl bg-[#171c28] p-3">
-                    <SkeletonBlock className="aspect-square rounded-md" />
-                    <SkeletonBlock className="mt-3 h-4 w-5/6 rounded" />
-                    <SkeletonBlock className="mt-2 h-4 w-1/2 rounded" />
+                <div key={index}>
+                    <SkeletonBlock className="aspect-[2/3] rounded-lg" />
+                    <SkeletonBlock className="mt-2 h-4 w-5/6 rounded" />
+                    <SkeletonBlock className="mt-1.5 h-3 w-1/2 rounded" />
                 </div>
             ))}
         </div>

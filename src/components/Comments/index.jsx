@@ -74,7 +74,7 @@ const appendReplyToParent = (comments, parentId, reply) =>
 const CommentsSkeleton = () => (
     <div className="mt-8 space-y-5">
         {[0, 1, 2].map((item) => (
-            <div key={item} className="flex gap-3 rounded-2xl bg-[#171c28] p-4">
+            <div key={item} className="flex gap-3 rounded-2xl bg-surface-2 p-4">
                 <div className="skeleton-shimmer h-11 w-11 rounded-full" />
                 <div className="flex-1 space-y-2">
                     <div className="skeleton-shimmer h-5 w-40 rounded" />
@@ -218,7 +218,7 @@ const Comments = ({ movieId, userId, onLoadComplete }) => {
     );
 
     return (
-        <section className="mt-7 overflow-hidden rounded-2xl border border-white/10 bg-[#202631] p-3 text-white shadow-xl shadow-black/20 sm:mt-8 sm:p-5 min-[1025px]:p-6">
+        <section className="mt-7 overflow-hidden rounded-2xl border border-white/10 bg-surface-3 p-3 text-white shadow-xl shadow-black/20 sm:mt-8 sm:p-5 min-[1025px]:p-6">
             <div className="mb-5">
                 <h2 className="text-xl font-semibold lg:text-2xl">
                     Danh sách bình luận
