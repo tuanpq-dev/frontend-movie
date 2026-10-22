@@ -2,7 +2,7 @@
 
 Web xem phim (KLTN). React 18 + Vite 5 + Tailwind 3. Trang admin dùng Ant Design 5. UI người xem đang được làm lại theo phong cách **RoPhim** (rophim1.vip/phimhay).
 
-**Phạm vi người xem:** chỉ xem, lọc, tìm kiếm phim. Nguồn phim là **KKPhim** (`phimapi.com`). Phía người xem **không có** đăng nhập, yêu thích, bình luận, thanh toán. Backend riêng (`VITE_API_URL`) chỉ còn phục vụ admin và `/sign-in` cho admin.
+**Phạm vi người xem:** chỉ xem, lọc, tìm kiếm phim. Nguồn phim là **KKPhim** (`phimapi.com`). Phía người xem **không có** đăng nhập, yêu thích, bình luận, thanh toán. Backend riêng (`VITE_API_URL`) chỉ còn phục vụ admin và `/sign-in` cho admin. Ngoại lệ: **Xem chung** (Watch Party) cần kênh realtime: mặc định P2P WebRTC qua **Trystero** (không cần cấu hình), có env Supabase thì dùng Supabase Realtime. Xem [docs/WATCH_PARTY.md](docs/WATCH_PARTY.md).
 
 ## Quy tắc bắt buộc
 
@@ -40,6 +40,7 @@ Web xem phim (KLTN). React 18 + Vite 5 + Tailwind 3. Trang admin dùng Ant Desig
 - Trong CSS thuần dùng `theme("colors.surface.DEFAULT")`, ví dụ [carousel.css](src/components/FeatureMovies/carousel.css).
 - Class tiện ích global ở [src/index.css](src/index.css): `.page-surface`, `.media-section`, `.card-hover`, `.skeleton-shimmer`, `.container`.
 - Màu nhấn được giữ cố ý (không đổi sang token): màu like/reply/xóa trong `Comments/Comment.jsx` (component này hiện không dùng).
+- Màu avatar ở Xem chung là `hsl(hue …)` sinh theo từng người (dữ liệu, không phải màu giao diện). Chấm trạng thái dùng `emerald-400` / `red-400` mặc định của Tailwind.
 
 ## Có sẵn — tái sử dụng, không viết lại
 
@@ -53,6 +54,7 @@ Web xem phim (KLTN). React 18 + Vite 5 + Tailwind 3. Trang admin dùng Ant Desig
 | `/danh-sach/:slug` | `Catalog kind="list"` | `slug` thuộc `LIST_TYPES` |
 | `/the-loai/:slug`, `/quoc-gia/:slug`, `/nam/:slug` | `Catalog kind="category" / "country" / "year"` | Bộ lọc tương ứng bị khóa (ẩn) |
 | `/tim-kiem?keyword=` | `Catalog kind="search"` | |
+| `/watch-party/:roomId?phim=&sv=&tap=` | `WatchParty` | Phòng xem chung. Query chỉ là gợi ý ban đầu, trạng thái host ghi đè. Tạo từ nút "Xem chung" ở Watch |
 
 Bộ lọc và phân trang của `Catalog` nằm trên URL: `?category=&country=&year=&sort_lang=&sort_field=&page=`. Muốn thêm trang danh sách mới thì thêm `kind` vào `KIND_CONFIG` trong [Catalog.jsx](src/pages/Catalog.jsx), **không tạo trang mới**.
 
@@ -67,7 +69,9 @@ Bộ lọc và phân trang của `Catalog` nằm trên URL: `?category=&country=
 - `components/FeatureMovies/` (`index.jsx` + `Movie.jsx`): banner slider dùng `react-multi-carousel`, tự chạy 4 giây. Props `movies`, `loading`.
 - `components/MediaList/index.jsx`: `MediaList({ movies, title, viewAllTo })` là section có tiêu đề + link "Xem tất cả"; `MovieGrid({ movies })` là lưới card 2→6 cột (export riêng, dùng ở Catalog).
 - `components/MediaList/MovieCard.jsx`: `MovieCard({ movie })` kiểu RoPhim: poster 2:3, badge chất lượng, badge `lang`/`episodeCurrent` ở cạnh dưới, tên Việt + tên gốc.
-- `components/EpisodeList.jsx`: `EpisodeList({ movie, activeServer, activeEpisode })` gồm tab server + lưới tập, link sang `/xem`.
+- `components/EpisodeList.jsx`: `EpisodeList({ movie, activeServer, activeEpisode, onSelect, disabled })` gồm tab server + lưới tập, link sang `/xem`; có `onSelect(serverIndex, episodeSlug)` thì hiện nút thay link.
+- `components/HlsPlayer.jsx`: `<HlsPlayer ref src onFatal autoPlay {...videoProps} />` (hls.js, `ref` trỏ thẳng `<video>`). Dùng ở Watch và WatchParty, không viết player thứ hai.
+- `components/WatchParty/`: `PartyPlayer` (player đồng bộ, ref `{ apply, getPlayback, setRate }`), `PartyPanel` (tab chat/người xem) + `Avatar({ nickname, hue })`.
 - `components/MovieFilter.jsx`: `MovieFilter({ values, onChange(key, value), hidden })` là 5 select (thể loại, quốc gia, năm, ngôn ngữ, sắp xếp).
 - `components/Pagination.jsx`: `Pagination({ currentPage, totalPages, onChange })`.
 - `components/CircularProgressBar.jsx`: vòng điểm (dùng cho `tmdb.vote_average`).
@@ -94,6 +98,11 @@ Bộ lọc và phân trang của `Catalog` nằm trên URL: `?category=&country=
 - `hooks/useCachedResource.js` + `libs/requestCache.js` (`invalidateCache(prefix)`, `clearRequestCache`). Cache key của KKPhim có dạng `kk:<path?query>`.
   - Hook không bao giờ trả dữ liệu hay lỗi của key cũ khi key đổi.
   - Option `keepPreviousData: true` giữ dữ liệu cũ trong lúc tải; khi đó hook trả thêm `isPreviousData` để làm mờ nội dung (đang dùng ở Catalog).
+- Xem chung:
+  - `libs/watchParty/protocol.js`: hàm thuần, không phụ thuộc React hay transport: hằng số, `sanitize*` (mọi payload realtime phải qua đây), `expectedTime`, `needsResync`, `pickHost`, `isNewerHost`, `createRateLimiter`, `nearestRate`.
+  - `libs/watchParty/room.js`: `createRoomId`, `buildRoomPath`, `loadIdentity`/`saveNickname` (clientId theo tab ở sessionStorage), `markKicked`/`wasKicked`. Nhẹ, không import Supabase.
+  - `libs/watchParty/transport.js`: `createTransport({ roomId, profile, onEvent, onMembers, onStatus })` → `{ name, settleMs, send, leave }`, chọn `transportP2P.js` (Trystero, mặc định) hoặc `transportSupabase.js` (+ `supabase.js`) theo env. Import động nên không vào bundle chính. Đổi/thêm kênh truyền thì viết transport mới cùng interface, **không sửa hook**.
+  - `hooks/useWatchParty.js`: `useWatchParty({ roomId, identity, getSnapshot, onRemoteState, onKicked })` trả `{ status, members, hostId, isHost, allowAll, canControl, messages, publishState, sendChat, transferHost, kick, setAllowAll }`.
 - `hooks/useInView.js`: `const [ref, inView] = useInView({ rootMargin })`, khi đã vào viewport thì giữ `true` (dùng cho `HomeSection`).
 - `libs/apiClient.js`, `libs/config.js`: chỉ dùng cho backend riêng/admin.
 - Admin: `@crema/core/DataTable`, `@crema/core/Form/*`, `@crema/hook/useCallApi`, `shared/utils/*`.
@@ -207,7 +216,10 @@ Response của `/v1/api/...` dạng danh sách: `data.items`, `data.params.pagin
   - Section trang chủ tải lười: từ 8 request lúc vào trang xuống còn khoảng 3.
   - Banner chỉ ưu tiên ảnh đầu; bỏ blur ở banner và header; ScrollToTop nhảy ngay thay vì cuộn mượt từ cuối trang; Watch tự cuộn lên player khi đổi tập.
   - Bỏ font weight 800 không dùng; thêm preconnect tới phimapi/phimimg.
-- Trước đó (chưa commit): modal trailer chuyển từ `react-youtube` sang iframe; thêm ScrollToTop; HeaderSearch có dropdown gợi ý.
+- **2026-10-22, Xem chung (Watch Party):**
+  - Thêm `@supabase/supabase-js` và `nanoid` (cài bằng `--legacy-peer-deps` vì `react-intl` xung đột peer `@types/react` từ trước).
+  - Tách `HlsPlayer` khỏi `Watch.jsx`. Thêm nút "Xem chung" ở Watch, `onSelect` cho `EpisodeList`, route `/watch-party/:roomId`, `.env.example`, `docs/WATCH_PARTY.md`.
+\1- **2026-10-22, Xem chung không cần Supabase:** thêm `trystero` (P2P WebRTC, relay Nostr công cộng để tìm nhau) làm transport mặc định; tách hook khỏi Supabase qua `transport.js`. Host trùng `epoch` thì người vào phòng trước thắng (tránh người mới vào cướp host khi P2P chưa nối xong). Đã chạy E2E bằng 2 Chrome headless: 19/19 kịch bản pass.\n- Trước đó (chưa commit): modal trailer chuyển từ `react-youtube` sang iframe; thêm ScrollToTop; HeaderSearch có dropdown gợi ý.
 
 ## Lộ trình theo RoPhim (chưa làm)
 
@@ -218,5 +230,6 @@ Response của `/v1/api/...` dạng danh sách: `data.items`, `data.params.pagin
 
 ## Lệnh
 
-- `npm run dev`, `npm run build`, `npm run lint`
-- Biến môi trường: `VITE_API_URL` (backend riêng cho admin, mặc định `http://localhost:8080`). KKPhim không cần biến môi trường.
+- `npm run dev`, `npm run build`, `npm run lint`, `npm test` (node:test cho `libs/watchParty/protocol.test.js`)
+- Biến môi trường: `VITE_API_URL` (backend riêng cho admin, mặc định `http://localhost:8080`). KKPhim không cần biến môi trường. `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` là **tùy chọn** cho Xem chung (không có thì dùng P2P; chỉ anon key, xem `.env.example`).
+- `npm install` cần `--legacy-peer-deps` (xung đột peer có sẵn của `react-intl`).

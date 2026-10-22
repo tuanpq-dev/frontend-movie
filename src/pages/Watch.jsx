@@ -1,47 +1,15 @@
-import Hls from "hls.js";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import {
+    Link,
+    useNavigate,
+    useParams,
+    useSearchParams,
+} from "react-router-dom";
 import { DetailSkeleton } from "@components/Skeleton";
 import EpisodeList from "@components/EpisodeList";
+import HlsPlayer from "@components/HlsPlayer";
+import { buildRoomPath, createRoomId } from "@libs/watchParty/room";
 import { useKKMovie } from "@/hooks/useMovieData";
-
-// Phát m3u8 bằng hls.js; lỗi nghiêm trọng thì gọi onFatal để chuyển sang iframe embed.
-const HlsPlayer = ({ src, onFatal }) => {
-    const videoRef = useRef(null);
-
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video || !src) return undefined;
-
-        if (Hls.isSupported()) {
-            const hls = new Hls({ enableWorker: true });
-            hls.on(Hls.Events.ERROR, (_, data) => {
-                if (data.fatal) onFatal();
-            });
-            hls.loadSource(src);
-            hls.attachMedia(video);
-            return () => hls.destroy();
-        }
-
-        video.src = src;
-        video.load();
-        return () => {
-            video.removeAttribute("src");
-            video.load();
-        };
-    }, [src, onFatal]);
-
-    return (
-        <video
-            ref={videoRef}
-            className="absolute inset-0 h-full w-full"
-            controls
-            autoPlay
-            playsInline
-            onError={onFatal}
-        />
-    );
-};
 
 const Watch = () => {
     const { slug } = useParams();
@@ -49,6 +17,7 @@ const Watch = () => {
     const { data: movie, loading } = useKKMovie(slug);
     const [useEmbed, setUseEmbed] = useState(false);
     const switchToEmbed = useCallback(() => setUseEmbed(true), []);
+    const navigate = useNavigate();
 
     const servers = movie?.servers || [];
     const serverIndex = Math.min(
@@ -74,7 +43,10 @@ const Watch = () => {
     useEffect(() => {
         const current = episode?.slug;
         if (previousEpisode.current && current !== previousEpisode.current) {
-            playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            playerRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+            });
         }
         previousEpisode.current = current;
     }, [episode?.slug]);
@@ -92,6 +64,16 @@ const Watch = () => {
     }
 
     const showEmbed = (useEmbed || !episode?.m3u8) && episode?.embed;
+
+    const startWatchParty = () => {
+        navigate(
+            buildRoomPath(createRoomId(), {
+                movieSlug: movie.slug,
+                server: serverIndex,
+                episode: episode?.slug,
+            }),
+        );
+    };
 
     return (
         <div className="page-surface px-3 py-4 text-white sm:px-5 min-[1025px]:py-6">
@@ -115,10 +97,7 @@ const Watch = () => {
                             style={{ border: 0 }}
                         />
                     ) : (
-                        <HlsPlayer
-                            src={episode.m3u8}
-                            onFatal={switchToEmbed}
-                        />
+                        <HlsPlayer src={episode.m3u8} onFatal={switchToEmbed} />
                     )}
                 </div>
 
@@ -138,7 +117,16 @@ const Watch = () => {
                                 .join(" • ")}
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                        {episode && (
+                            <button
+                                type="button"
+                                onClick={startWatchParty}
+                                className="rounded-full bg-surface-3 px-4 py-2 text-sm transition-colors hover:bg-surface-4"
+                            >
+                                Xem chung
+                            </button>
+                        )}
                         {episode?.m3u8 && episode?.embed && (
                             <button
                                 type="button"

@@ -15,6 +15,7 @@ const HomePage = lazy(() => import("./pages/HomePage.jsx"));
 const MovieDetail = lazy(() => import("@pages/MovieDetail"));
 const Watch = lazy(() => import("@pages/Watch"));
 const Catalog = lazy(() => import("@pages/Catalog"));
+const WatchParty = lazy(() => import("@pages/WatchParty"));
 const SignIn = lazy(() => import("@pages/SignIn"));
 const SignUp = lazy(() => import("@pages/SignUp"));
 const UserProfile = lazy(() => import("@pages/UserProfile"));
@@ -71,6 +72,10 @@ const router = createBrowserRouter([
             {
                 path: "/tim-kiem",
                 element: withSuspense(<Catalog kind="search" />),
+            },
+            {
+                path: "/watch-party/:roomId",
+                element: withSuspense(<WatchParty />),
             },
         ],
     },
