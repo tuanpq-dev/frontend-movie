@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-// Chọn server + tập; link sang /xem/:slug?sv=&tap=
-const EpisodeList = ({ movie, activeServer = 0, activeEpisode }) => {
+// Chọn server + tập; mặc định link sang /xem/:slug?sv=&tap=.
+// Có onSelect(serverIndex, episodeSlug) thì hiện nút thay cho link (dùng ở phòng xem chung).
+const EpisodeList = ({
+    movie,
+    activeServer = 0,
+    activeEpisode,
+    onSelect,
+    disabled = false,
+}) => {
     const [serverIndex, setServerIndex] = useState(activeServer);
     const servers = movie.servers || [];
     const server = servers[serverIndex] || servers[0];
@@ -36,18 +43,32 @@ const EpisodeList = ({ movie, activeServer = 0, activeEpisode }) => {
                     const isActive =
                         serverIndex === activeServer &&
                         episode.slug === activeEpisode;
+                    const className = `block w-full truncate rounded-lg px-2 py-2 text-center text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                        isActive
+                            ? "bg-primary font-semibold text-primary-ink"
+                            : "bg-surface-3 text-white hover:bg-surface-4"
+                    }`;
                     return (
                         <li key={episode.slug}>
-                            <Link
-                                to={`/xem/${movie.slug}?sv=${serverIndex}&tap=${episode.slug}`}
-                                className={`block truncate rounded-lg px-2 py-2 text-center text-sm transition-colors ${
-                                    isActive
-                                        ? "bg-primary font-semibold text-primary-ink"
-                                        : "bg-surface-3 text-white hover:bg-surface-4"
-                                }`}
-                            >
-                                {episode.name}
-                            </Link>
+                            {onSelect ? (
+                                <button
+                                    type="button"
+                                    disabled={disabled}
+                                    onClick={() =>
+                                        onSelect(serverIndex, episode.slug)
+                                    }
+                                    className={className}
+                                >
+                                    {episode.name}
+                                </button>
+                            ) : (
+                                <Link
+                                    to={`/xem/${movie.slug}?sv=${serverIndex}&tap=${episode.slug}`}
+                                    className={className}
+                                >
+                                    {episode.name}
+                                </Link>
+                            )}
                         </li>
                     );
                 })}
